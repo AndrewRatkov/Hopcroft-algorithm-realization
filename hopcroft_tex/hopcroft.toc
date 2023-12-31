@@ -1,0 +1,13 @@
+\babel@toc {russian}{}\relax 
+\contentsline {section}{\numberline {1}Описание алгоритма Хопкрофта}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Вступление}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Используемые объекты и подготовка к минимизации}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Несколько утверждений}{4}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Псевдокод}{5}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Корректность алгоритма}{6}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Асимптотика алгоритма}{6}{subsection.1.6}%
+\contentsline {section}{\numberline {2}Реализация алгоритма}{7}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Класс DFA}{8}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Класс NFA}{10}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Взаимодействие с пользователем}{11}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Заключение}{12}{section.3}%

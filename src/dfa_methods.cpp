@@ -46,13 +46,14 @@ void DFA::init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_nod
 
 void DFA::print_table() {
     std::cout << "SIZE: " << size << "  LEN_ALPHABET: " << alphabet_length << " STARTING_NODE: " << starting_node << '\n';
+    if (size > 50) { std::cout << "Too big dfa to print in stdout\n"; return; }
     uint32_t spaces_per_cell = 1;
     uint32_t max_state_amount = 10;
     while (max_state_amount < size) {
         spaces_per_cell++; max_state_amount *= 10;
     }
     spaces_per_cell += 2;
-    if (spaces_per_cell <  4) spaces_per_cell =  4;
+    if (spaces_per_cell < 4) spaces_per_cell =  4;
 
     // left upper corner --- empty
     std::cout << std::string(spaces_per_cell, ' ');
@@ -191,7 +192,7 @@ void DFA::construct_reversed_delta() {
         }
     }
 
-
+// // debug for reversed delta
 //        std::cout << "DECODE REVERSED_DELTA: (for small DFAs)\n";
 //        for (uint32_t s = 0; s < size; s++) {
 //            for (uint32_t a = 0; a < alphabet_length; a++) {
@@ -208,7 +209,7 @@ void DFA::construct_reversed_delta() {
 
 
 void DFA::color_acc_and_rej_in_2_colors() {
-//        std::cout << "coloring\n";
+    // size >= 2
     next_B_cap=std::vector<std::vector<uint32_t> >(alphabet_length, std::vector<uint32_t>(size, EMPTY_STATE));
     prev_B_cap=std::vector<std::vector<uint32_t> >(alphabet_length, std::vector<uint32_t>(size, EMPTY_STATE));
     
@@ -251,6 +252,7 @@ void DFA::color_acc_and_rej_in_2_colors() {
             states_info[s].color = 0; // acc have color 0
             last_acc = s;
         } else {
+            
             block_lengths[1]++;
             for (uint32_t a = 0; a < alphabet_length; a++) {
                 if (reversed_delta_lengths[a][s]) { // possible to get to s by a: reversed_delta_lengths[a][s] > 0
@@ -258,6 +260,7 @@ void DFA::color_acc_and_rej_in_2_colors() {
                     if (block_and_char2first_node_of_this_color_and_char[a][1] == EMPTY_STATE) {
                         block_and_char2first_node_of_this_color_and_char[a][1] = s;
                         prev_B_cap[a][s] = EMPTY_STATE;
+                        
                     } else {
                         next_B_cap[a][last1[a]] = s;
                         prev_B_cap[a][s] = last1[a];
@@ -278,13 +281,16 @@ void DFA::color_acc_and_rej_in_2_colors() {
         }
     }
 
+
     if (last_acc != EMPTY_STATE) states_info[last_acc].next_state_of_same_color = EMPTY_STATE; // at least one acc found
     if (last_rej != EMPTY_STATE) states_info[last_rej].next_state_of_same_color = EMPTY_STATE; // at least one rej found
+    
     info_L = std::vector<std::vector<bool> >(alphabet_length, std::vector<bool>(size, false));
     for (uint32_t a = 0; a < alphabet_length; a++) {
         if (B_cap_lengths[a][0] <= B_cap_lengths[a][1]) {L[a].push_back(0); info_L[a][0] = true;}
         else {L[a].push_back(1); info_L[a][1] = true; }
     }
+    
     blocks_need_to_be_separated.assign(size, false);
     block2index_of_new_block.assign(size, EMPTY_STATE);
     block2index_special.assign(size, EMPTY_STATE);
@@ -311,8 +317,6 @@ bool DFA::minimize_iteration() {
     info_L[a][i] = false;
     L[a].pop_back();
 
-    //std::cout << "a: " << a << "; i: " << i << '\n';
-
     uint32_t state_i = block_and_char2first_node_of_this_color_and_char[a][i];
     uint32_t added_blocks = 0;
     while (state_i != EMPTY_STATE) {
@@ -332,7 +336,6 @@ bool DFA::minimize_iteration() {
                 block2index_of_new_block[sep_state_color] = empty_colors.front();
                 empty_colors.pop();
                 block2index_special[sep_state_color] = added_blocks;
-                //std::cout << "old_color" << sep_state_color << ' ' << "aboba_color" << added_blocks << '\n';
                 added_blocks++;
             }
         }
@@ -352,7 +355,6 @@ bool DFA::minimize_iteration() {
     std::vector<uint32_t> last_states_of_new_blocks(added_blocks, EMPTY_STATE);
 
     for (auto t: sep_states) {
-        // std::cout << t << '\n';
         uint32_t new_color = block2index_of_new_block[states_info[t].color];
         uint32_t old_color = states_info[t].color;
         
@@ -360,7 +362,6 @@ bool DFA::minimize_iteration() {
         block_lengths[old_color]--;
         if (block_lengths[old_color] == 0) empty_colors.push(old_color);
         
-        //std::cout << "old_color: " << old_color << " new_color: " << new_color << '\n';
 
         if (states_info[t].prev_state_of_same_color == EMPTY_STATE) {
             block2first_state_of_this_block[old_color] = states_info[t].next_state_of_same_color;
@@ -459,31 +460,24 @@ bool DFA::minimize_iteration() {
     return false;
 }
 
-void DFA::minimization() {
-    bool debug = false;
+void DFA::minimization(bool no_debug) {
+    if (!no_debug) std::cout << "DELETING UNREACHABLE STATES...\n";
     delete_unreachable_states();
-    std::cout << "MINIMIZING\n";
-//        std::cout << "0---\n";
+    if (size < 2) return;
+    if (!no_debug) std::cout << "MINIMIZATION STARTED...\n";
     construct_reversed_delta();
     color_acc_and_rej_in_2_colors();
-//        print_table();
 
-
-    print_current_classes_of_equality(false, debug);
-//        print_L();
-//        print_B_caps();
 
     bool finish = false; uint32_t it = 1;
     while (!finish) {
-//            std::cout << it << " ---\n";
         finish = minimize_iteration();
-//            print_current_classes_of_equality(true, debug);
-//            print_B_caps();
-//            print_L();
         it++;
     }
-    print_current_classes_of_equality(true, debug);
-    std::cout << it - 1 << " iterations\n";
+    if (!no_debug) {
+        std::cout << "MINIMIZATION FINISHED SUCCESSFULLY\n";
+        std::cout << it - 1 << " iterations happened\n";
+    }
 
     std::vector<uint32_t> new_color2block(size), block2new_color(size);
     uint32_t next_empty_color = 0;
@@ -505,6 +499,10 @@ void DFA::minimization() {
         }
     }
     init(alphabet_length, new_size, new_starting_node, new_delta, new_v_acc);
+    if (!no_debug) {
+        std::cout << "DFA UPDATED\n";
+        std::cout << "It has " << size << " states now\n";
+    }
 }
 
 
@@ -571,28 +569,43 @@ void DFA::print_B_caps() {
     }
 }
 
+int DFA::save_to_file(char* filename) {
+    FILE* file = fopen(filename, "wb");
+    if (file == nullptr) {
+        return 1; // nothing to save
+    }
+    int size_writing = fwrite(&size, sizeof(uint32_t), 1, file);
+    int alphabet_writing = fwrite(&alphabet_length, sizeof(uint32_t), 1, file);
+    int starting_node_writing = fwrite(&starting_node, sizeof(uint32_t), 1, file);
+    if (size_writing != 1 || alphabet_writing != 1 || starting_node_writing != 1) {
+        fclose(file);
+        return 1;
+    }
 
-DFA::DFA(std::string &s) {
-    std::vector<bool> _v_acc = {};
-    std::vector<std::vector<uint32_t> > _delta;
-    uint32_t idx = 0;
-    while (s[idx] != '_') {
-        _v_acc.push_back(s[idx] != '0');
-        ++idx;
+    for (uint32_t a = 0; a < alphabet_length; a++) {
+        for (uint32_t i = 0; i < size; i++) {
+            int delta_writing = fwrite(&delta[a][i], sizeof(uint32_t), 1, file);
+            if (delta_writing != 1) { fclose(file); return 1; }
+        }
     }
-    uint32_t _size = idx;
-    uint32_t _alphabet_size = ((uint32_t)s.size() - 1) / _size - 1;
-    idx++;
-    _delta.assign(_alphabet_size, std::vector<uint32_t>(_size));
-    while (idx < s.size()) {
-        _delta[(idx - _size - 1) % _alphabet_size][(idx - _size - 1) / _alphabet_size] = (uint32_t)(s[idx] - '0');
-        ++idx;
+
+    
+    for (uint32_t i = 0; i < size; i += 8) {
+        unsigned char bools = 0;
+        for (uint32_t j = 0; j < 8; j++) {
+            if (i + j < size && states_info[i + j].acc) {
+                bools |= (1 << j);
+            }
+        }
+        int bools_writing = fwrite(&bools, sizeof(unsigned char), 1, file);
+        if (bools_writing != 1) { fclose(file); return 1; }
     }
-    // std::cout << _alphabet_size << ' ' << _size << '\n';
-    init(_alphabet_size, _size, 0, _delta, _v_acc);
+    fclose(file);
+    return 0;
 }
 
-DFA::DFA(std::string &special_type, std::vector<uint32_t> &parameters) {
+
+/*DFA::DFA(std::string &special_type, std::vector<uint32_t> &parameters) {
     if (special_type == "bamboo") {
         assert(!parameters.empty() && parameters[0] >= 1);
         uint32_t _size = parameters[0];
@@ -661,6 +674,4 @@ DFA::DFA(std::string &special_type, std::vector<uint32_t> &parameters) {
         init(1, _size, 0, _delta, _v_acc);
     }
 
-}
-
-
+}*/

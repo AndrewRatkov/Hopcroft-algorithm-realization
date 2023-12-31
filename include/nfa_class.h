@@ -16,9 +16,9 @@ public:
         init(_alphabet_length, _size, _delta, _starting_nodes, _v_acc);
     }
 
-    explicit NFA(std::string &s);
+    explicit NFA(char* s);
 
-    void init(uint32_t _returnalphabet_length, uint32_t _size, std::vector<std::vector<std::vector<uint32_t> > > &_delta, std::vector<uint32_t> &_starting_nodes, std::vector<bool> &_v_acc);
+    void init(uint32_t _alphabet_length, uint32_t _size, std::vector<std::vector<std::vector<uint32_t> > > &_delta, std::vector<uint32_t> &_starting_nodes, std::vector<bool> &_v_acc);
 
     void print();
 

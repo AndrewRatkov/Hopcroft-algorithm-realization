@@ -1,32 +1,51 @@
 #include "nfa_class.h"
 
-NFA::NFA(std::string &s) {
-    uint32_t _size, idx=0, underlines=0;
-    std::vector<bool> _v_acc = {};
-    std::vector<uint32_t> _starting_nodes={0};
-    while (s[idx] != '_') {
-        _v_acc.push_back(s[idx] == '1');
-        ++idx;
+NFA::NFA(char* s) { // I assume that string s is valid
+    char* ptr = s;
+    uint32_t blocks = 0;
+    bool opened_bracket = false;
+    bool exists_initial_sign = false;
+
+    while (*ptr != '-' && *ptr != '+') {
+        if (*ptr == '{') opened_bracket = true;
+        else if (*ptr == '}') opened_bracket = false;
+        else if (*ptr == '>') exists_initial_sign = true;
+        if (!opened_bracket && *ptr != '>') blocks++;
+        ptr++;
     }
-    _size = idx;
-    for (char c: s) underlines += (c == '_');
-    uint32_t _alphabet_length = underlines / _size;
-    std::cout << _size << ' ' << _alphabet_length << '\n'; // need to be commented???
+
+    uint32_t _size = 0;
+    char* end_ptr = ptr;
+    while (*ptr != '\0') {_size++; ptr++;}
+
+
+    uint32_t _alphabet_length = blocks / _size;
+    std::vector<bool> _v_acc(_size);
+    for (uint32_t i = 0; i < _size; i++) _v_acc[i] = (end_ptr[i] == '+');
+
+    std::vector<uint32_t> _starting_nodes={};
     std::vector<std::vector<std::vector<uint32_t> > > _delta(_size, std::vector<std::vector<uint32_t> >(_alphabet_length, std::vector<uint32_t>(0)));
-    uint32_t q=0, a=0;
-    while (idx < s.size() - 1) {
-        ++idx;
-        if (s[idx] == '_') {
-            ++a;
-            if (a == _alphabet_length) {
-                a = 0;
-                ++q;
+
+    ptr = s;
+    int read_blocks = 0; // how many blocks are already read
+    opened_bracket = false;
+    while (*ptr != '-' && *ptr != '+') {
+        if (*ptr == '>') _starting_nodes.push_back(read_blocks / _alphabet_length);
+        else if (*ptr == '{') opened_bracket = true;
+        else if (*ptr == '}') opened_bracket = false;
+        if (*ptr != '{' && *ptr != '>') {
+            if (*ptr != '}') {
+                _delta[read_blocks / _alphabet_length][read_blocks % _alphabet_length].push_back(char2integer(*ptr));
             }
+            if (!opened_bracket) read_blocks++;
         }
-        else {
-            _delta[q][a].push_back((int)(s[idx] - '0'));
-        }
+        ptr++;
+    }    
+
+    if (!exists_initial_sign) {
+        _starting_nodes.push_back(0);
     }
+
     init(_alphabet_length, _size, _delta, _starting_nodes, _v_acc);
 }
 
@@ -64,7 +83,7 @@ void NFA::print() {
 }
 
 DFA NFA::convert2dfa() { // O(2^n * n^2)
-    assert(size <= 30); // I'm not sure that more than 2^30 nodes will be okay
+    assert(size <= 31); // I'm not sure that more than 2^31 nodes will be okay
     uint32_t dfa_size = (1 << size);
     std::vector<std::vector<uint32_t> > dfa_delta(alphabet_length, std::vector<uint32_t>(dfa_size));
 

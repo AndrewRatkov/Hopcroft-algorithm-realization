@@ -3,12 +3,22 @@
 
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <vector>
 #include <cassert>
 #include <queue>
 #include <cassert>
 #include <chrono>
 
+struct request_check{
+    bool accepted;
+    std::string error;
+};
+
+request_check correctness_of_dfa_input(char* command, char* dfa_str);
+
+char integer2char(uint32_t x);
+uint32_t char2integer(char c);
 
 // I'll assume that dfa has <= 4294967295 states before minimization
 const uint32_t EMPTY_STATE = UINT32_MAX;
@@ -91,7 +101,7 @@ public:
     // false if algorithm is not finished yet
     bool minimize_iteration();
 
-    void minimization();
+    void minimization(bool no_debug);
 
     void print_current_classes_of_equality(bool finished, bool debug);
 
@@ -103,33 +113,18 @@ public:
         return size;
     }
 
-    // uint32_t size() const {
-    //     return size;
-    // }
-
+    int save_to_file(char* filename);
 
     // DFA constructor [works the same way as init method]
     DFA(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_node, std::vector<std::vector<uint32_t> > &_delta, std::vector<bool> &_v_acc) {
         init(_alphabet_length, _size, _starting_node, _delta, _v_acc);
     }
 
-    // DFA constructor from a string (for small automata)
-    // the string should be in a such format:
-    // Let n be number of states: 0, 1, 2, ..., n - 1 (n <= 10)
-    // and a be length of the alphabet
-    // then it's string is starts with [b_0][b_1]...[b_n]_
-    // where [b_i] is 0 if state i is rej, 1 if state i is acc
-    // and continues with n*a digits:
-    // (n blocks of a digits, each block consists of
-    // [state, there can we go by first symbol][state, there can we go by second symbol]...[state, there can we go by last symbol])
-    // for example 0101_1230 -- it's DFA for 0 --> 1 --> 2 --> 3 --> 0
-    // DFA constructor from a string (for small automata)
-    explicit DFA(std::string &s);
+    // DFA constructor from 2 arguments (for small automata)
+    explicit DFA(char* command, char* dfa_str);
 
-    explicit DFA(std::string &special_type, std::vector<uint32_t> &parameters);
+    // explicit DFA(std::string &special_type, std::vector<uint32_t> &parameters);
 
 };
-
-
 
 #endif
