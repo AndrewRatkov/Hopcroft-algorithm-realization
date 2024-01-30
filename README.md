@@ -16,3 +16,4 @@ hopcroft8
    ├╼ dfa_build.cpp
    ╰╼ nfa_methods.cpp
 ```
+Документация (отчёт) находится в файле ```hopcroft_tex/hopcroft.pdf```
