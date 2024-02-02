@@ -2,7 +2,7 @@
 ## Структура проекта
 Алгоритм Хопкрофта -- алгоритм для минимизации DFA, работяющий с аcимптотикой O(n*log(n)). Реализован в текущем проекте.
 ```
-hopcroft8
+Hopcroft-algorithm-realization
 ├╼ hopcroft_tex/    ← documentation files (.tex, .bib, .pdf, etc)
 ├╼ include/         ← header files (*.h)
 |  ├╼ dfa_class.h   ← structure of dfa class
