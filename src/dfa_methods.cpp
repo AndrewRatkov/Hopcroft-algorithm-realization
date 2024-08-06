@@ -605,6 +605,41 @@ int DFA::save_to_file(char* filename) {
 }
 
 
+bool DFA::operator==(const DFA& other) {
+    // TODO: add `minimized` field
+    if (this->size != other.size) return false;
+    if (this->alphabet_length != other.alphabet_length) return false;
+    
+    std::vector<uint32_t> dict(this->size, EMPTY_STATE); // map state->state
+    dict[this->starting_node] = other.starting_node;
+
+    std::queue<uint32_t> nodes2check;
+    nodes2check.push(this->starting_node);
+
+    while (!nodes2check.empty()) {
+        uint32_t cur = nodes2check.front();
+        nodes2check.pop();
+        
+        for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+            if (dict[this->delta[a][cur]] == EMPTY_STATE) {
+                nodes2check.push(this->delta[a][cur]);
+                dict[this->delta[a][cur]] = other.delta[a][dict[cur]];
+            } else if (dict[this->delta[a][cur]] != other.delta[a][dict[cur]]) return false;
+        }
+    }
+
+    for (uint32_t i = 0; i < this->size; ++i) {
+        if (dict[i] == EMPTY_STATE) return false;
+        if (this->states_info[i].acc != other.states_info[dict[i]].acc) return false;
+        // for (uint32_t a = 0; a < this->alphabet_length; ++a) { /// think about it: maybe it is useless
+        //     if (dict[this->delta[a][i]] != other.delta[a][dict[i]]) return false;
+        // }
+    }
+
+    return true;
+}
+
+
 /*DFA::DFA(std::string &special_type, std::vector<uint32_t> &parameters) {
     if (special_type == "bamboo") {
         assert(!parameters.empty() && parameters[0] >= 1);

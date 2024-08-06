@@ -113,6 +113,10 @@ public:
         return size;
     }
 
+    uint32_t get_alphabet_length() const {
+        return alphabet_length;
+    }
+
     int save_to_file(char* filename);
 
     // DFA constructor [works the same way as init method]
@@ -122,6 +126,8 @@ public:
 
     // DFA constructor from 2 arguments (for small automata)
     explicit DFA(char* command, char* dfa_str);
+
+    bool operator==(const DFA& other);
 
     // explicit DFA(std::string &special_type, std::vector<uint32_t> &parameters);
 

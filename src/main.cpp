@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    DFA new_dfa(argv[1], argv[2]);
+    DFA new_dfa(argv[1], argv[2]); /// ???
     if (strcmp(argv[1], "from_nfa_string") == 0) {
         NFA new_nfa(argv[2]);
         new_dfa = new_nfa.convert2dfa();
