@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.11.15)  29 JAN 2024 00:08
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2024.3.15)  8 AUG 2024 13:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/home/andrey/CLionProjects/hopcroft_main/hopcroft8/hopcroft_tex/hopcroft.tex
-(/home/andrey/CLionProjects/hopcroft_main/hopcroft8/hopcroft_tex/hopcroft.tex
+**/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex
+(/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex
 LaTeX2e <2021-11-15> patch level 1
 L3 programming layer <2022-01-21> (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2021/10/04 v1.4n Standard LaTeX document class
@@ -53,9 +53,9 @@ Language: english 2017/06/06 v3.3r English support from the babel system
 Package babel Info: Hyphen rules for 'canadian' set to \l@english
 (babel)             (\language0). Reported on input line 102.
 Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
-(babel)             (\language47). Reported on input line 105.
+(babel)             (\language32). Reported on input line 105.
 Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
-(babel)             (\language47). Reported on input line 108.
+(babel)             (\language32). Reported on input line 108.
 ) (/usr/share/texlive/texmf-dist/tex/generic/babel-russian/russianb.ldf
 File: russianb.ldf 2021/01/10 1.3m Russian support for the Babel system
 Language: russian 2020/09/09 1.3k Russian support for the Babel system
@@ -938,7 +938,7 @@ LaTeX Warning: Command \CYRA invalid in math mode on input line 109.
 
 Missing character: There is no À in font cmr10!
 [3] [4] [5] [6]
-LaTeX Font Info:    Trying to load font information for T2A+cmtt on input line 306.
+LaTeX Font Info:    Trying to load font information for T2A+cmtt on input line 329.
  (/usr/share/texlive/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
 File: t2acmtt.fd 2001/08/11 v1.0a Computer Modern Cyrillic font definitions
 ) [7] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
@@ -948,17 +948,17 @@ File: lstlang1.sty 2020/03/24 1.8d listings language file
 ) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2020/03/24 1.8d (Carsten Heinz)
 ) [8]
-Overfull \hbox (1.48108pt too wide) in paragraph at lines 373--374
+Overfull \hbox (1.48108pt too wide) in paragraph at lines 396--397
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
  []
 
 [9]
-Overfull \hbox (1.48108pt too wide) in paragraph at lines 431--432
+Overfull \hbox (1.48108pt too wide) in paragraph at lines 454--455
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
  []
 
 [10]
-Overfull \hbox (1.48108pt too wide) in paragraph at lines 445--446
+Overfull \hbox (1.48108pt too wide) in paragraph at lines 468--469
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
  []
 
@@ -967,12 +967,12 @@ File: lstlang1.sty 2020/03/24 1.8d listings language file
 ) (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2020/03/24 1.8d listings language file
 ) [11] [12]
-Overfull \hbox (0.65306pt too wide) in paragraph at lines 531--564
+Overfull \hbox (0.65306pt too wide) in paragraph at lines 554--587
 [][] 
  []
 
 
-Overfull \hbox (0.65306pt too wide) in paragraph at lines 617--655
+Overfull \hbox (0.65306pt too wide) in paragraph at lines 640--678
 [][] 
  []
 
@@ -984,18 +984,18 @@ Package rerunfilecheck Info: File `hopcroft.out' has not changed.
 (rerunfilecheck)             Checksum: 7DAE872747CD01BF68ACE093BB39EFE4;3419.
  ) 
 Here is how much of TeX's memory you used:
- 35874 strings out of 478287
- 801477 string characters out of 5849288
- 1516293 words of memory out of 5000000
- 53385 multiletter control sequences out of 15000+600000
+ 35876 strings out of 478287
+ 801502 string characters out of 5849289
+ 1511817 words of memory out of 5000000
+ 53386 multiletter control sequences out of 15000+600000
  484025 words of font info for 56 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 99i,17n,94p,1868b,2190s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 99i,17n,94p,1870b,2190s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t2a.enc}{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbi1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0500.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on hopcroft.pdf (14 pages, 476827 bytes).
+Output written on hopcroft.pdf (14 pages, 475141 bytes).
 PDF statistics:
- 368 PDF objects out of 1000 (max. 8388607)
- 308 compressed objects within 4 object streams
- 105 named destinations out of 1000 (max. 500000)
+ 364 PDF objects out of 1000 (max. 8388607)
+ 304 compressed objects within 4 object streams
+ 106 named destinations out of 1000 (max. 500000)
  138 words of extra memory for PDF output out of 10000 (max. 10000000)
 
