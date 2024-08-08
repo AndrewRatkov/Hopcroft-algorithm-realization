@@ -17,8 +17,8 @@ struct request_check{
 
 request_check correctness_of_dfa_input(char* command, char* dfa_str);
 
-char integer2char(uint32_t x);
-uint32_t char2integer(char c);
+char integer2char(const uint32_t x);
+uint32_t char2integer(const char c);
 
 // I'll assume that dfa has <= 4294967295 states before minimization
 const uint32_t EMPTY_STATE = UINT32_MAX;
@@ -29,8 +29,6 @@ struct StateInfo {
     uint32_t color=UINT32_MAX; // when minimising we color the states
     uint32_t next_state_of_same_color=EMPTY_STATE; // number of previous state of the same color
     uint32_t prev_state_of_same_color=EMPTY_STATE; // number of the next state of the same color
-
-    // bool acc=false; // is the current state final or not
 };
 
 class DFA{
@@ -80,9 +78,9 @@ public:
     void init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_node, std::vector<std::vector<uint32_t> > &table, std::vector<bool> &v_acc);
 
 
-    void print_table();
+    void print_table() const;
 
-    bool check_string(std::vector<uint32_t> &str);
+    bool check_string(std::vector<uint32_t> &str) const;
 
     // we can delete unreachable states (for example, at the start of the algorithm)
     void delete_unreachable_states();
@@ -102,21 +100,21 @@ public:
 
     void minimization(bool no_debug);
 
-    void print_current_classes_of_equality(bool finished, bool debug);
+    void print_current_classes_of_equality(bool finished, bool debug) const;
 
-    void print_L();
+    void print_L() const;
 
-    void print_B_caps();
+    void print_B_caps() const;
 
     uint32_t get_size() const {
-        return size;
+        return this->size;
     }
 
     uint32_t get_alphabet_length() const {
-        return alphabet_length;
+        return this->alphabet_length;
     }
 
-    int save_to_file(char* filename);
+    int save_to_file(char* filename) const;
 
     // DFA constructor [works the same way as init method]
     DFA(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_node, std::vector<std::vector<uint32_t> > &_delta, std::vector<bool> &_v_acc) {
@@ -126,7 +124,7 @@ public:
     // DFA constructor from 2 arguments (for small automata)
     explicit DFA(char* command, char* dfa_str);
 
-    bool operator==(const DFA& other);
+    bool operator==(const DFA& other) const;
 
     // explicit DFA(std::string &special_type, std::vector<uint32_t> &parameters);
 

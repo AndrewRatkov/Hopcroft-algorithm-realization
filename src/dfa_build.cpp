@@ -1,7 +1,7 @@
 #include "dfa_class.h"
 #include "nfa_class.h"
 
-char integer2char(uint32_t x) { // 0 <= x < 62
+char integer2char(const uint32_t x) { // 0 <= x < 62
     assert(x < 62);
     if (x < 10) {
         return ('0' + (char)x);
@@ -12,7 +12,7 @@ char integer2char(uint32_t x) { // 0 <= x < 62
     }
 }
 
-uint32_t char2integer(char c) {
+uint32_t char2integer(const char c) {
     assert(('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
     if ('0' <= c && c <= '9') {
         return (int)(c - '0');

@@ -46,7 +46,7 @@ void DFA::init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_nod
     prev_B_cap={};
 }
 
-void DFA::print_table() {
+void DFA::print_table() const {
     std::cout << "SIZE: " << size << "  LEN_ALPHABET: " << alphabet_length << " STARTING_NODE: " << starting_node << '\n';
     if (size > 50) { std::cout << "Too big dfa to print in stdout\n"; return; }
     uint32_t spaces_per_cell = 1;
@@ -91,7 +91,7 @@ void DFA::print_table() {
 
 
 
-bool DFA::check_string(std::vector<uint32_t> &str) {
+bool DFA::check_string(std::vector<uint32_t> &str) const {
         uint32_t q_cur = starting_node;
         for (uint32_t c: str) {
             q_cur = delta[c][q_cur];
@@ -508,7 +508,7 @@ void DFA::minimization(bool no_debug) {
 }
 
 
-void DFA::print_current_classes_of_equality(bool finished, bool debug) {
+void DFA::print_current_classes_of_equality(bool finished, bool debug) const {
     if (!finished) {return;}
     uint32_t not_empty_blocks = 0;
     for (uint32_t c = 0; c < size; c++) {
@@ -542,7 +542,7 @@ void DFA::print_current_classes_of_equality(bool finished, bool debug) {
     std::cout << "+++++++++++++++++++++\n";
 }
 
-void DFA::print_L() {
+void DFA::print_L() const {
     assert(L.size() == alphabet_length);
     std::cout << "L:\n";
     for (uint32_t a = 0; a < alphabet_length; a++) {
@@ -557,7 +557,7 @@ void DFA::print_L() {
     }
 }
 
-void DFA::print_B_caps() {
+void DFA::print_B_caps() const {
     for (uint32_t color = 0; color < size; color++) {
         for (uint32_t a = 0; a < alphabet_length; a++) {
             std::cout << "color: " << color << "; char: " << a << '\n';
@@ -571,7 +571,7 @@ void DFA::print_B_caps() {
     }
 }
 
-int DFA::save_to_file(char* filename) {
+int DFA::save_to_file(char* filename) const {
     FILE* file = fopen(filename, "wb");
     if (file == nullptr) {
         return 1; // nothing to save
@@ -607,7 +607,7 @@ int DFA::save_to_file(char* filename) {
 }
 
 
-bool DFA::operator==(const DFA& other) {
+bool DFA::operator==(const DFA& other) const {
     // TODO: add `minimized` field
     if (this->size != other.size) return false;
     if (this->alphabet_length != other.alphabet_length) return false;
