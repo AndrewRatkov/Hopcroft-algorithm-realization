@@ -30,17 +30,16 @@ struct StateInfo {
     uint32_t next_state_of_same_color=EMPTY_STATE; // number of previous state of the same color
     uint32_t prev_state_of_same_color=EMPTY_STATE; // number of the next state of the same color
 
-    bool acc=false; // is the current state final or not
+    // bool acc=false; // is the current state final or not
 };
 
 class DFA{
-    // reformat vector<bool>
-    // remake!!!
 
 private:
     uint32_t alphabet_length=0; // length of the alphabet
     uint32_t size=0; // number of states in DFA
     std::vector<std::vector<uint32_t> > delta; // delta function
+    std::vector<bool> acc;
     uint32_t starting_node=0;
     std::vector<StateInfo> states_info={}; // information about colors and acc/rej of all states
 

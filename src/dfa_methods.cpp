@@ -2,20 +2,22 @@
 
 void DFA::init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_node, std::vector<std::vector<uint32_t> > &table, std::vector<bool> &v_acc) {
     // size, alphabet length and index of starting are just given
-    size = _size; alphabet_length = _alphabet_length;
-    starting_node = _starting_node;
+    this->size = _size;
+    this->alphabet_length = _alphabet_length;
+    this->starting_node = _starting_node;
 
     // before we get the table for delta, we need to check that its sizes are size * alphabet_length
-    assert(table.size() == alphabet_length);
-    for (uint32_t i = 0; i < alphabet_length; ++i) {
-        assert(table[i].size() == size);
+    assert(table.size() == _alphabet_length);
+    for (uint32_t i = 0; i < _alphabet_length; ++i) {
+        assert(table[i].size() == _size);
     }
-    delta = table;
+    this->delta = table;
 
     // getting information about the states: acc or rej they are
     assert(v_acc.size() == size);
-    states_info.assign(size, {UINT32_MAX, EMPTY_STATE, EMPTY_STATE, false});
-    for (uint32_t i = 0; i < size; ++i) states_info[i].acc = v_acc[i];
+    states_info.assign(size, {UINT32_MAX, EMPTY_STATE, EMPTY_STATE});
+    this->acc.assign(size, false);
+    for (uint32_t i = 0; i < size; ++i) this->acc[i] = v_acc[i];
 
     // we don't need to color anything at the first time
     // k=0; // so number of colors is 0
@@ -82,7 +84,7 @@ void DFA::print_table() {
             while (next_copy >= 10) {next_copy /= 10; spaces--;}
             std::cout << "|" << std::string(spaces, ' ') << delta[i][node] << ' ';
         }
-        std::cout << "| " << (states_info[node].acc ? "ACC" : "REJ") << '\n';
+        std::cout << "| " << (acc[node] ? "ACC" : "REJ") << '\n';
         std::cout << std::string(spaces_per_cell*(alphabet_length+1) + alphabet_length+7, '=') << '\n';
     }
 }
@@ -94,7 +96,7 @@ bool DFA::check_string(std::vector<uint32_t> &str) {
         for (uint32_t c: str) {
             q_cur = delta[c][q_cur];
         }
-        return states_info[q_cur].acc;
+        return acc[q_cur];
 }
 
 void DFA::delete_unreachable_states() {
@@ -140,7 +142,7 @@ void DFA::delete_unreachable_states() {
 
     for (uint32_t i = 0; i < size; ++i) {
         if (colors[i] == 2) { // if state is visited
-            new_v_acc[node2new_idx[i]] = states_info[i].acc;
+            new_v_acc[node2new_idx[i]] = acc[i];
             for (uint32_t a=0; a < alphabet_length; a++) {
                 new_delta[a][node2new_idx[i]] = node2new_idx[delta[a][i]];
             }
@@ -225,7 +227,7 @@ void DFA::color_acc_and_rej_in_2_colors() {
 
     std::vector<uint32_t> last0(alphabet_length, EMPTY_STATE), last1(alphabet_length, EMPTY_STATE); // for B_cap(B(0), a) and B_cap(B(1), a) for all a in alphabet
     for (uint32_t s = 0; s < size; ++s) {
-        if (states_info[s].acc) {
+        if (acc[s]) {
             block_lengths[0]++;
             for (uint32_t a = 0; a < alphabet_length; a++) {
                 if (reversed_delta_lengths[a][s]) { // possible to get to s by a: reversed_delta_lengths[a][s] > 0
@@ -493,7 +495,7 @@ void DFA::minimization(bool no_debug) {
     uint32_t new_starting_node = block2new_color[states_info[starting_node].color];
     std::vector<std::vector<uint32_t> > new_delta(alphabet_length, std::vector<uint32_t>(new_size));
     for (uint32_t s = 0; s < new_size; s++) {
-        new_v_acc[s] = states_info[block2first_state_of_this_block[new_color2block[s]]].acc;
+        new_v_acc[s] = acc[block2first_state_of_this_block[new_color2block[s]]];
         for (uint32_t a = 0; a < alphabet_length; a++) {
             new_delta[a][s] = block2new_color[states_info[delta[a][block2first_state_of_this_block[new_color2block[s]]]].color];
         }
@@ -593,7 +595,7 @@ int DFA::save_to_file(char* filename) {
     for (uint32_t i = 0; i < size; i += 8) {
         unsigned char bools = 0;
         for (uint32_t j = 0; j < 8; j++) {
-            if (i + j < size && states_info[i + j].acc) {
+            if (i + j < size && acc[i + j]) {
                 bools |= (1 << j);
             }
         }
@@ -630,7 +632,7 @@ bool DFA::operator==(const DFA& other) {
 
     for (uint32_t i = 0; i < this->size; ++i) {
         if (dict[i] == EMPTY_STATE) return false;
-        if (this->states_info[i].acc != other.states_info[dict[i]].acc) return false;
+        if (this->acc[i] != other.acc[dict[i]]) return false;
         // for (uint32_t a = 0; a < this->alphabet_length; ++a) { /// think about it: maybe it is useless
         //     if (dict[this->delta[a][i]] != other.delta[a][dict[i]]) return false;
         // }
