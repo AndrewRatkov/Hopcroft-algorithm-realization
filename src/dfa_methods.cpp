@@ -28,7 +28,6 @@ void DFA::init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_nod
     L.assign(alphabet_length, {});
 
     addresses_for_reversed_delta={};
-    reversed_delta_lengths = {};
     reversed_delta={};
 
     B_cap_lengths ={};
@@ -161,51 +160,33 @@ void DFA::construct_reversed_delta() {
     // reversed_delta[addresses_for_reversed_delta[a][s]], reversed_delta[addresses_for_reversed_delta[a][s] + 1], ...
     // ..., reversed_delta[addresses_for_reversed_delta[a][s] + reversed_delta_lengths[a][s] - 1] are all states t
     // such as delta(t, a) = s
-    addresses_for_reversed_delta = std::vector<std::vector<uint32_t> >(alphabet_length, std::vector<uint32_t>(size, 0));
-    reversed_delta_lengths = std::vector<std::vector<uint32_t> >(alphabet_length, std::vector<uint32_t>(size, 0));
+    addresses_for_reversed_delta.assign(alphabet_length, std::vector<uint32_t>(size, 0));
     reversed_delta.assign(size * alphabet_length, 0);
+    std::vector<std::vector<uint32_t> > reversed_delta_lengths(alphabet_length, std::vector<uint32_t>(size, 0));
 
-    for (uint32_t s = 0; s < size; s++) {
-        for (uint32_t a = 0; a < alphabet_length; a++) {
-            reversed_delta_lengths[a][delta[a][s]]++;
+    for (uint32_t a = 0; a < alphabet_length; ++a) {
+        for (uint32_t s = 0; s < size; ++s) {
+            ++reversed_delta_lengths[a][delta[a][s]];
         }
     }
 
-    for (uint32_t s = 0; s < size; s++) {
-        for (uint32_t a = 0; a < alphabet_length; a++) {
-            if (!a) { // a == 0
-                if (!s) continue; // s == 0
-                else {
-                    addresses_for_reversed_delta[a][s] = addresses_for_reversed_delta[alphabet_length - 1][s - 1] + reversed_delta_lengths[alphabet_length - 1][s - 1];
-                }
-            } else {
-                addresses_for_reversed_delta[a][s] = addresses_for_reversed_delta[a - 1][s] + reversed_delta_lengths[a - 1][s];
-            }
+    uint32_t cur = 0;
+    for (uint32_t a = 0; a < alphabet_length; ++a) {
+        for (uint32_t s = 0; s < size; ++s) {
+            addresses_for_reversed_delta[a][s] = cur;
+            cur += reversed_delta_lengths[a][s];
         }
     }
 
     std::vector<std::vector<uint32_t> > addresses_for_put = addresses_for_reversed_delta;
 
-    for (uint32_t s = 0; s < size; s++) {
-        for (uint32_t a = 0; a < alphabet_length; a++) {
+    for (uint32_t s = 0; s < size; ++s) {
+        for (uint32_t a = 0; a < alphabet_length; ++a) {
             uint32_t address_to_put = addresses_for_put[a][delta[a][s]];
             reversed_delta[address_to_put] = s;
-            addresses_for_put[a][delta[a][s]]++;
+            ++addresses_for_put[a][delta[a][s]];
         }
     }
-
-// // debug for reversed delta
-//        std::cout << "DECODE REVERSED_DELTA: (for small DFAs)\n";
-//        for (uint32_t s = 0; s < size; s++) {
-//            for (uint32_t a = 0; a < alphabet_length; a++) {
-//                std::cout << "s: " << s << ", a: " << a << '\n';
-//                uint32_t indexer = addresses_for_reversed_delta[a][s];
-//                for (uint32_t i = 0; i < reversed_delta_lengths[a][s]; i++) {
-//                    std::cout << reversed_delta[indexer + i] << ' '; // indexer + 0LL + i
-//                }
-//                std::cout << '\n';
-//            }
-//        }
 
 }
 
@@ -230,7 +211,7 @@ void DFA::color_acc_and_rej_in_2_colors() {
         if (acc[s]) {
             block_lengths[0]++;
             for (uint32_t a = 0; a < alphabet_length; a++) {
-                if (reversed_delta_lengths[a][s]) { // possible to get to s by a: reversed_delta_lengths[a][s] > 0
+                if (get_reversed_delta_length(a, s)) { // possible to get to s by a
                     B_cap_lengths[a][0]++; // counter of acc states in which it's possible to get with a
                     if (block_and_char2first_node_of_this_color_and_char[a][0] == EMPTY_STATE) {
                         block_and_char2first_node_of_this_color_and_char[a][0] = s;
@@ -257,7 +238,7 @@ void DFA::color_acc_and_rej_in_2_colors() {
             
             block_lengths[1]++;
             for (uint32_t a = 0; a < alphabet_length; a++) {
-                if (reversed_delta_lengths[a][s]) { // possible to get to s by a: reversed_delta_lengths[a][s] > 0
+                if (get_reversed_delta_length(a, s)) { // possible to get to s by a:
                     B_cap_lengths[a][1]++;
                     if (block_and_char2first_node_of_this_color_and_char[a][1] == EMPTY_STATE) {
                         block_and_char2first_node_of_this_color_and_char[a][1] = s;
@@ -322,7 +303,7 @@ bool DFA::minimize_iteration() {
     uint32_t state_i = block_and_char2first_node_of_this_color_and_char[a][i];
     uint32_t added_blocks = 0;
     while (state_i != EMPTY_STATE) {
-        for (uint32_t t = addresses_for_reversed_delta[a][state_i]; t < addresses_for_reversed_delta[a][state_i] + reversed_delta_lengths[a][state_i]; t++) {
+        for (uint32_t t = addresses_for_reversed_delta[a][state_i]; t < next_address_for_reversed_delta(a, state_i); ++t) {
             uint32_t sep_state = reversed_delta[t]; // delta(state, a) in B(i)
             uint32_t sep_state_color = states_info[sep_state].color;
 
@@ -390,7 +371,7 @@ bool DFA::minimize_iteration() {
 
         
         for (uint32_t c = 0; c < alphabet_length; c++) {
-            if (reversed_delta_lengths[c][t] > 0) { // we can get to t by c
+            if (get_reversed_delta_length(c, t)) { // we can get to t by c
 
                 if (prev_B_cap[c][t] == EMPTY_STATE) {
                     block_and_char2first_node_of_this_color_and_char[c][old_color] = next_B_cap[c][t];

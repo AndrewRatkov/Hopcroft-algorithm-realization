@@ -58,7 +58,6 @@ private:
 
     // all this is used for reversed_delta
     std::vector<std::vector<uint32_t> > addresses_for_reversed_delta = {}; // each element <= n*I
-    std::vector<std::vector<uint32_t> > reversed_delta_lengths = {}; // each element <= n
     std::vector<uint32_t> reversed_delta={}; // each element <= n
 
     std::vector<std::vector<uint32_t> > B_cap_lengths = {};
@@ -72,6 +71,21 @@ private:
     std::queue<uint32_t> empty_colors={};
     std::vector<uint32_t> block_lengths={};
     std::vector<uint32_t> block2index_special={};
+
+    uint32_t next_address_for_reversed_delta(const uint32_t& a, const uint32_t& state) {
+        assert(a < this->alphabet_length && state < this->size);
+        if (state < this->size - 1) { 
+            return addresses_for_reversed_delta[a][state + 1];
+        } else if (a < this->alphabet_length - 1) {
+            return addresses_for_reversed_delta[a + 1][0];
+        } else { // (a, state) is the last pair
+            return this->alphabet_length * this->size;
+        }
+    }
+
+    uint32_t get_reversed_delta_length(const uint32_t& a, const uint32_t& state) {
+        return next_address_for_reversed_delta(a, state) - addresses_for_reversed_delta[a][state];
+    }
 
 
 public:
