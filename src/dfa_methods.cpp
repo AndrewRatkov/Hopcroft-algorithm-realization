@@ -238,11 +238,11 @@ void DFA::color_acc_and_rej_in_2_colors() {
     if (last_acc != EMPTY_STATE) states_info[last_acc].next_state_of_same_color = EMPTY_STATE; // at least one acc found
     if (last_rej != EMPTY_STATE) states_info[last_rej].next_state_of_same_color = EMPTY_STATE; // at least one rej found
     
-    info_L = std::vector<std::vector<bool> >(alphabet_length, std::vector<bool>(size, false));
+    info_L.assign(alphabet_length, std::vector<bool>(size, false));
     L.assign(alphabet_length, {});
-    for (uint32_t a = 0; a < alphabet_length; a++) {
-        if (B_cap_lengths[a][0] <= B_cap_lengths[a][1]) {L[a].push_back(0); info_L[a][0] = true;}
-        else {L[a].push_back(1); info_L[a][1] = true; }
+    for (uint32_t a = 0; a < alphabet_length; ++a) {
+        if (B_cap_lengths[a][0] <= B_cap_lengths[a][1]) { L[a].push_back(0); info_L[a][0] = true; }
+        else { L[a].push_back(1); info_L[a][1] = true; }
     }
     
     blocks_need_to_be_separated.assign(size, false);
@@ -261,9 +261,7 @@ bool DFA::minimize_iteration() {
 
     // finding a and i such as i-th class is in L[a]
     uint32_t a = 0;
-    while (a < alphabet_length && L[a].empty()) {
-        a++;
-    }
+    while (a < alphabet_length && L[a].empty()) ++a;
     if (a == alphabet_length) return true; // algorithm terminates (all L[a] are empty)
 
     // extracting i
@@ -275,7 +273,7 @@ bool DFA::minimize_iteration() {
     uint32_t added_blocks = 0;
     while (state_i != EMPTY_STATE) {
         for (uint32_t t = addresses_for_reversed_delta[a][state_i]; t < next_address_for_reversed_delta(a, state_i); ++t) {
-            uint32_t sep_state = reversed_delta[t]; // delta(state, a) in B(i)
+            uint32_t sep_state = reversed_delta[t]; // delta(sep_state, a) in B(i)
             uint32_t sep_state_color = states_info[sep_state].color;
 
 
@@ -290,7 +288,7 @@ bool DFA::minimize_iteration() {
                 block2index_of_new_block[sep_state_color] = empty_colors.front();
                 empty_colors.pop();
                 block2index_special[sep_state_color] = added_blocks;
-                added_blocks++;
+                ++added_blocks;
             }
         }
         state_i = next_B_cap[a][state_i];
@@ -312,8 +310,8 @@ bool DFA::minimize_iteration() {
         uint32_t new_color = block2index_of_new_block[states_info[t].color];
         uint32_t old_color = states_info[t].color;
         
-        block_lengths[new_color]++;
-        block_lengths[old_color]--;
+        ++block_lengths[new_color];
+        --block_lengths[old_color];
         if (block_lengths[old_color] == 0) empty_colors.push(old_color);
         
 
@@ -341,7 +339,7 @@ bool DFA::minimize_iteration() {
         states_info[t].color = new_color;
 
         
-        for (uint32_t c = 0; c < alphabet_length; c++) {
+        for (uint32_t c = 0; c < alphabet_length; ++c) {
             if (get_reversed_delta_length(c, t)) { // we can get to t by c
 
                 if (prev_B_cap[c][t] == EMPTY_STATE) {
@@ -364,8 +362,8 @@ bool DFA::minimize_iteration() {
                 }
 
                 last_states_with_new_color_and_char[c][new_block_number] = t;
-                B_cap_lengths[c][old_color]--;
-                B_cap_lengths[c][new_color]++;
+                --B_cap_lengths[c][old_color];
+                ++B_cap_lengths[c][new_color];
             }
 
         }
@@ -374,7 +372,7 @@ bool DFA::minimize_iteration() {
     last_states_with_new_color_and_char.clear();
     last_states_of_new_blocks.clear();
 
-    for (uint32_t c = 0; c < alphabet_length; c++) {
+    for (uint32_t c = 0; c < alphabet_length; ++c) {
         for (auto j : sep_blocks) {
             uint32_t new_color = block2index_of_new_block[j];
             if (info_L[c][j] && (block_lengths[j] == 0)) {
@@ -394,8 +392,7 @@ bool DFA::minimize_iteration() {
                 if (B_cap_lengths[c][new_color] <= B_cap_lengths[c][j]) {
                     L[c].push_back(new_color);
                     info_L[c][new_color] = true;
-                }
-                else {
+                } else {
                     L[c].push_back(j);
                     info_L[c][j] = true;
                 }
