@@ -187,9 +187,9 @@ void DFA::color_acc_and_rej_in_2_colors() {
     for (uint32_t s = 0; s < size; ++s) {
         if (acc[s]) {
             ++block_lengths[0];
-            for (uint32_t a = 0; a < alphabet_length; a++) {
+            for (uint32_t a = 0; a < alphabet_length; ++a) {
                 if (get_reversed_delta_length(a, s)) { // possible to get to s by a
-                    B_cap_lengths[a][0]++; // counter of acc states in which it's possible to get with a
+                    ++B_cap_lengths[a][0]; // counter of acc states in which it's possible to get with a
                     prev_B_cap[a][s] = last0[a];
                     if (last0[a] == EMPTY_STATE) {
                         block_and_char2first_node_of_this_color_and_char[a][0] = s;
@@ -210,9 +210,9 @@ void DFA::color_acc_and_rej_in_2_colors() {
             last_acc = s;
         } else {
             ++block_lengths[1];
-            for (uint32_t a = 0; a < alphabet_length; a++) {
+            for (uint32_t a = 0; a < alphabet_length; ++a) {
                 if (get_reversed_delta_length(a, s)) { // possible to get to s by a:
-                    B_cap_lengths[a][1]++;
+                    ++B_cap_lengths[a][1];
                     prev_B_cap[a][s] = last1[a];
                     if (last1[a] == EMPTY_STATE) {
                         block_and_char2first_node_of_this_color_and_char[a][1] = s;
@@ -234,7 +234,6 @@ void DFA::color_acc_and_rej_in_2_colors() {
         }
     }
 
-
     if (last_acc != EMPTY_STATE) states_info[last_acc].next_state_of_same_color = EMPTY_STATE; // at least one acc found
     if (last_rej != EMPTY_STATE) states_info[last_rej].next_state_of_same_color = EMPTY_STATE; // at least one rej found
     
@@ -247,17 +246,66 @@ void DFA::color_acc_and_rej_in_2_colors() {
     
     blocks_need_to_be_separated.assign(size, false);
     block2index_of_new_block.assign(size, EMPTY_STATE);
-    block2index_special.assign(size, EMPTY_STATE);
 
-    for (uint32_t i = 2; i < size; ++i) {
-        empty_colors.push(i);
+    this->colors = 2;
+}
+
+void DFA::extract_state_to_new_block(const uint32_t s, const uint32_t new_block) {
+    const uint32_t old_block = this->states_info[s].color;
+    const uint32_t old_prev = this->states_info[s].prev_state_of_same_color;
+    const uint32_t old_next = this->states_info[s].next_state_of_same_color;
+    const uint32_t new_next = this->block2first_state_of_this_block[new_block];
+
+    if (old_prev != EMPTY_STATE) {
+        this->states_info[old_prev].next_state_of_same_color = old_next;
+    } else {
+        this->block2first_state_of_this_block[old_block] = old_next;
     }
 
+    if (old_next != EMPTY_STATE) {
+        this->states_info[old_next].prev_state_of_same_color = old_prev;
+    }
+
+    this->block2first_state_of_this_block[new_block] = s;
+    this->states_info[s].prev_state_of_same_color = EMPTY_STATE;
+    this->states_info[s].next_state_of_same_color = new_next;
+    
+    if (new_next != EMPTY_STATE) {
+        this->states_info[new_next].prev_state_of_same_color = s;
+    }
+    
+    for (uint32_t c = 0; c < this->alphabet_length; ++c) {
+        if (get_reversed_delta_length(c, s)) {
+            --B_cap_lengths[c][old_block];
+            ++B_cap_lengths[c][new_block];
+
+            if (this->prev_B_cap[c][s] != EMPTY_STATE) {
+                this->next_B_cap[c][this->prev_B_cap[c][s]] = this->next_B_cap[c][s];
+            } else {
+                this->block_and_char2first_node_of_this_color_and_char[c][old_block] = this->next_B_cap[c][s];
+            }
+
+            if (this->next_B_cap[c][s] != EMPTY_STATE) {
+                this->prev_B_cap[c][this->next_B_cap[c][s]] = this->prev_B_cap[c][s];
+            }
+
+            this->next_B_cap[c][s] = this->block_and_char2first_node_of_this_color_and_char[c][new_block];
+            this->prev_B_cap[c][s] = EMPTY_STATE;
+            
+            if (this->block_and_char2first_node_of_this_color_and_char[c][new_block] != EMPTY_STATE) {
+                this->prev_B_cap[c][this->block_and_char2first_node_of_this_color_and_char[c][new_block]] = s;
+            }
+
+            this->block_and_char2first_node_of_this_color_and_char[c][new_block] = s;
+        }
+    }
+
+    this->states_info[s].color = new_block;                        
 }
 
 
 bool DFA::minimize_iteration() {
-    if (empty_colors.empty()) return true; // number of blocks == size => nothing to minimize
+    if (this->colors == this->size) return true; // number of blocks == size => nothing to minimize
 
     // finding a and i such as i-th class is in L[a]
     uint32_t a = 0;
@@ -269,122 +317,73 @@ bool DFA::minimize_iteration() {
     info_L[a][i] = false;
     L[a].pop_back();
 
+    struct info {
+        uint32_t states2extract;
+        uint32_t new_color;
+    };
+
+    std::unordered_map<uint32_t, info> blocks_info;
+    
     uint32_t state_i = block_and_char2first_node_of_this_color_and_char[a][i];
-    uint32_t added_blocks = 0;
     while (state_i != EMPTY_STATE) {
         for (uint32_t t = addresses_for_reversed_delta[a][state_i]; t < next_address_for_reversed_delta(a, state_i); ++t) {
             uint32_t sep_state = reversed_delta[t]; // delta(sep_state, a) in B(i)
-            uint32_t sep_state_color = states_info[sep_state].color;
-
-
-            if (block_lengths[sep_state_color] == 1) { // if block consists only from 1 state, we don't need to separate it
-                continue;
-            }
-
             sep_states.push_back(sep_state);
-            if (!blocks_need_to_be_separated[sep_state_color]) {
-                blocks_need_to_be_separated[sep_state_color] = true;
-                sep_blocks.push_back(sep_state_color);
-                block2index_of_new_block[sep_state_color] = empty_colors.front();
-                empty_colors.pop();
-                block2index_special[sep_state_color] = added_blocks;
-                ++added_blocks;
+            
+            uint32_t sep_state_color = states_info[sep_state].color;
+            if (blocks_info.find(sep_state_color) == blocks_info.end()) {
+                blocks_info[sep_state_color] = {1, EMPTY_STATE};
+            } else {
+                ++blocks_info[sep_state_color].states2extract;
             }
         }
+
         state_i = next_B_cap[a][state_i];
     }
 
-    //std::cout << "BLOCKS_TO_SEPARATE:\n";
-    //for (auto color: colors_j) std::cout << color << ' ';
-    //std::cout << '\n';
-
-    //std::cout << "sep_states: ";
-    //for (auto sep_st: sep_states) std::cout << sep_st << ' ';
-    //std::cout << '\n';
-    //std::cout << " added_blocks: " << added_blocks << '\n';
-
-    std::vector<std::vector<uint32_t> > last_states_with_new_color_and_char(alphabet_length, std::vector<uint32_t>(added_blocks, EMPTY_STATE)); // reformat!!!
-    std::vector<uint32_t> last_states_of_new_blocks(added_blocks, EMPTY_STATE);
-
-    for (auto t: sep_states) {
-        uint32_t new_color = block2index_of_new_block[states_info[t].color];
-        uint32_t old_color = states_info[t].color;
-        
-        ++block_lengths[new_color];
-        --block_lengths[old_color];
-        if (block_lengths[old_color] == 0) empty_colors.push(old_color);
-        
-
-        if (states_info[t].prev_state_of_same_color == EMPTY_STATE) {
-            block2first_state_of_this_block[old_color] = states_info[t].next_state_of_same_color;
+    for (auto& block_info : blocks_info) {
+        const uint32_t block = block_info.first;
+        const uint32_t new_block_size = block_info.second.states2extract;
+        uint32_t& new_block = block_info.second.new_color;
+        if (new_block_size == block_lengths[block]) { // block does not divide into 2 new blocks
+            continue;
         } else {
-            states_info[states_info[t].prev_state_of_same_color].next_state_of_same_color = states_info[t].next_state_of_same_color;
-        }
+            new_block = this->colors;
+            ++this->colors;
 
-        if (states_info[t].next_state_of_same_color != EMPTY_STATE) {
-            states_info[states_info[t].next_state_of_same_color].prev_state_of_same_color = states_info[t].prev_state_of_same_color;
-        }
-        
-        uint32_t new_block_number = block2index_special[old_color];
-        states_info[t].next_state_of_same_color = EMPTY_STATE;
-        states_info[t].prev_state_of_same_color = last_states_of_new_blocks[new_block_number];
-        
-        if (last_states_of_new_blocks[new_block_number] == EMPTY_STATE) {
-            block2first_state_of_this_block[new_color] = t;
-        } else {
-            states_info[last_states_of_new_blocks[new_block_number]].next_state_of_same_color = t;
-        }
-        
-        last_states_of_new_blocks[new_block_number] = t;
-        states_info[t].color = new_color;
-
-        
-        for (uint32_t c = 0; c < alphabet_length; ++c) {
-            if (get_reversed_delta_length(c, t)) { // we can get to t by c
-
-                if (prev_B_cap[c][t] == EMPTY_STATE) {
-                    block_and_char2first_node_of_this_color_and_char[c][old_color] = next_B_cap[c][t];
-                } else {
-                    next_B_cap[c][prev_B_cap[c][t]] = next_B_cap[c][t];
+            if (block_lengths[block] < 2 * new_block_size) {
+                uint32_t s = block2first_state_of_this_block[block];
+                while (s != EMPTY_STATE) {
+                    uint32_t next_state = this->states_info[s].next_state_of_same_color;
+                    if (this->states_info[delta[a][s]].color != i) {
+                        extract_state_to_new_block(s, new_block);
+                    }
+                    s = next_state;            
                 }
 
-                if (next_B_cap[c][t] != EMPTY_STATE) {
-                    prev_B_cap[c][next_B_cap[c][t]] = prev_B_cap[c][t];
-                }
-
-                next_B_cap[c][t] = EMPTY_STATE;
-                prev_B_cap[c][t] = last_states_with_new_color_and_char[c][new_block_number];
-
-                if (last_states_with_new_color_and_char[c][new_block_number] == EMPTY_STATE) {
-                    block_and_char2first_node_of_this_color_and_char[c][new_color] = t;
-                } else {
-                    next_B_cap[c][last_states_with_new_color_and_char[c][new_block_number]] = t;
-                }
-
-                last_states_with_new_color_and_char[c][new_block_number] = t;
-                --B_cap_lengths[c][old_color];
-                ++B_cap_lengths[c][new_color];
+                block_lengths[new_block] = block_lengths[block] - new_block_size;
+                block_lengths[block] = new_block_size;
+                new_block = EMPTY_STATE;
+            } else {
+                block_lengths[block] -= new_block_size;
+                block_lengths[new_block] = new_block_size;
+                sep_blocks.push_back(block);
             }
-
         }
     }
 
-    last_states_with_new_color_and_char.clear();
-    last_states_of_new_blocks.clear();
+    for (const uint32_t sep_state: sep_states) {
+        const uint32_t new_block = blocks_info[this->states_info[sep_state].color].new_color;
+        if (new_block != EMPTY_STATE) {
+            extract_state_to_new_block(sep_state, new_block);
+        }
+    }
+
 
     for (uint32_t c = 0; c < alphabet_length; ++c) {
         for (auto j : sep_blocks) {
-            uint32_t new_color = block2index_of_new_block[j];
-            if (info_L[c][j] && (block_lengths[j] == 0)) {
-                if (!info_L[c][new_color]) {
-                    L[c].push_back(new_color);
-                }
-                info_L[c][new_color] = true;
-            } else if (block_lengths[j] == 0 || B_cap_lengths[c][j] == 0) { // вообще тут должно быть просто второе)
-                continue;
-            }
+            uint32_t new_color = blocks_info[j].new_color;
 
-            // both not empty
             if (info_L[c][j]) {
                 L[c].push_back(new_color);
                 info_L[c][new_color] = true;
@@ -398,11 +397,6 @@ bool DFA::minimize_iteration() {
                 }
             }
         }
-    }
-
-    for (auto j: sep_blocks) {
-        block2index_of_new_block[j] = EMPTY_STATE;
-        blocks_need_to_be_separated[j] = false;
     }
 
     sep_blocks.clear();
@@ -430,26 +424,21 @@ void DFA::minimization(bool no_debug) {
         std::cout << it - 1 << " iterations happened\n";
     }
 
-    std::vector<uint32_t> new_color2block(size), block2new_color(size);
-    uint32_t next_empty_color = 0;
-    for (uint32_t c = 0; c < size; c++) {
-        if (block2first_state_of_this_block[c] != EMPTY_STATE) {
-            new_color2block[next_empty_color] = c;
-            block2new_color[c] = next_empty_color;
-            next_empty_color++;
+    std::vector<std::vector<uint32_t> > new_delta(alphabet_length, std::vector<uint32_t>(colors));
+    std::vector<bool> new_acc(colors);
+
+    for (uint32_t a = 0; a < alphabet_length; ++a) {
+        for (uint32_t s = 0; s < colors; ++s) {
+            new_delta[a][s] = states_info[delta[a][block2first_state_of_this_block[s]]].color;
         }
     }
-    uint32_t new_size = next_empty_color;
-    std::vector<bool> new_v_acc(new_size);
-    uint32_t new_starting_node = block2new_color[states_info[starting_node].color];
-    std::vector<std::vector<uint32_t> > new_delta(alphabet_length, std::vector<uint32_t>(new_size));
-    for (uint32_t s = 0; s < new_size; s++) {
-        new_v_acc[s] = acc[block2first_state_of_this_block[new_color2block[s]]];
-        for (uint32_t a = 0; a < alphabet_length; a++) {
-            new_delta[a][s] = block2new_color[states_info[delta[a][block2first_state_of_this_block[new_color2block[s]]]].color];
-        }
+
+    for (uint32_t s = 0; s < colors; ++s) {
+        new_acc[s] = acc[block2first_state_of_this_block[s]];
     }
-    init(alphabet_length, new_size, new_starting_node, new_delta, new_v_acc);
+
+    init(alphabet_length, colors, states_info[starting_node].color, new_delta, new_acc);
+
     if (!no_debug) {
         std::cout << "DFA UPDATED\n";
         std::cout << "It has " << size << " states now\n";

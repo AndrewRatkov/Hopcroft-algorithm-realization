@@ -201,7 +201,7 @@ DFA::DFA(char* command, char* s) {
             }
         }
         for (uint32_t a = 0; a < _alphabet_length; a++) {
-            _delta[a][_size - 1] = (strcmp(command, "circle") == 0 ? _size - 1 : 0);
+            _delta[a][_size - 1] = (strcmp(command, "circle") ? _size - 1 : 0);
         }
         init(_alphabet_length, _size,  0, _delta, _v_acc);
     } else if (strcmp(command, "repeated_cycle") == 0) {

@@ -7,6 +7,7 @@
 #include <vector>
 #include <cassert>
 #include <queue>
+#include <unordered_map>
 #include <cassert>
 #include <chrono>
 
@@ -41,7 +42,6 @@ private:
     uint32_t starting_node=0;
     std::vector<StateInfo> states_info={}; // information about colors and acc/rej of all states
 
-    // uint32_t k=0; // number of colors
     std::vector<uint32_t> block2first_state_of_this_block={}; // if we color states we need to remember index of first state of each color
     std::vector<std::vector<uint32_t> > block_and_char2first_node_of_this_color_and_char={};
 
@@ -68,9 +68,9 @@ private:
     std::vector<uint32_t> sep_blocks={}; // Blocks to separate
     std::vector<uint32_t> sep_states={}; // states which should be separated from the blocks they are in (states, which will change their color)
 
-    std::queue<uint32_t> empty_colors={};
     std::vector<uint32_t> block_lengths={};
-    std::vector<uint32_t> block2index_special={};
+
+    uint32_t colors=0;
 
     uint32_t next_address_for_reversed_delta(const uint32_t& a, const uint32_t& state) {
         assert(a < this->alphabet_length && state < this->size);
@@ -87,10 +87,11 @@ private:
         return next_address_for_reversed_delta(a, state) - addresses_for_reversed_delta[a][state];
     }
 
+    void extract_state_to_new_block(const uint32_t s, const uint32_t new_block);
+
 
 public:
     void init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_node, std::vector<std::vector<uint32_t> > &table, std::vector<bool> &v_acc);
-
 
     void print_table() const;
 
