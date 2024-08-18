@@ -62,9 +62,6 @@ private:
 
     std::vector<std::vector<uint32_t> > B_cap_lengths = {};
 
-    std::vector<bool> blocks_need_to_be_separated={};
-    std::vector<uint32_t> block2index_of_new_block={};
-
     std::vector<uint32_t> sep_blocks={}; // Blocks to separate
     std::vector<uint32_t> sep_states={}; // states which should be separated from the blocks they are in (states, which will change their color)
 

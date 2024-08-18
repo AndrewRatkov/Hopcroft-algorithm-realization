@@ -20,7 +20,7 @@ void DFA::init(uint32_t _alphabet_length, uint32_t _size, uint32_t _starting_nod
 }
 
 void DFA::print_table() const {
-    std::cout << "SIZE: " << size << "  LEN_ALPHABET: " << alphabet_length << " STARTING_NODE: " << starting_node << '\n';
+    std::cout << "SIZE: " << this->size << "  LEN_ALPHABET: " << this->alphabet_length << " STARTING_NODE: " << this->starting_node << '\n';
     if (size > 50) { std::cout << "Too big dfa to print in stdout\n"; return; }
 
     uint32_t spaces_per_cell = 1;
@@ -34,7 +34,7 @@ void DFA::print_table() const {
     // left upper corner --- empty
     std::cout << std::string(spaces_per_cell, ' ');
 
-    for (uint32_t i = 0; i < alphabet_length; ++i) {
+    for (uint32_t i = 0; i < this->alphabet_length; ++i) {
         // counting spaces to write
         uint32_t i_copy = i;
         uint32_t spaces = spaces_per_cell - 2;
@@ -42,7 +42,7 @@ void DFA::print_table() const {
         std::cout << "|" << std::string(spaces, ' ') << i << ' ';
     }
     std::cout << "| TYPE \n";
-    std::cout << std::string(spaces_per_cell * (alphabet_length + 1) + alphabet_length + 7, '=') << '\n';
+    std::cout << std::string(spaces_per_cell * (this->alphabet_length + 1) + this->alphabet_length + 7, '=') << '\n';
 
     for (uint32_t node = 0; node < size; ++node) {
         // counting spaces to write
@@ -51,25 +51,25 @@ void DFA::print_table() const {
         while (state_copy >= 10) {state_copy /= 10; --spaces_first_column;}
         std::cout << std::string(spaces_first_column, ' ') << node << ' ';
 
-        for (uint32_t i = 0; i < alphabet_length; ++i) {
+        for (uint32_t i = 0; i < this->alphabet_length; ++i) {
             // counting spaces to write
-            uint32_t next_copy = delta[i][node];
+            uint32_t next_copy = this->delta[i][node];
             uint32_t spaces = spaces_per_cell - 2;
             while (next_copy >= 10) {next_copy /= 10; --spaces;}
-            std::cout << "|" << std::string(spaces, ' ') << delta[i][node] << ' ';
+            std::cout << "|" << std::string(spaces, ' ') << this->delta[i][node] << ' ';
         }
         std::cout << "| " << (acc[node] ? "ACC" : "REJ") << '\n';
-        std::cout << std::string(spaces_per_cell * (alphabet_length + 1) + alphabet_length + 7, '=') << '\n';
+        std::cout << std::string(spaces_per_cell * (this->alphabet_length + 1) + this->alphabet_length + 7, '=') << '\n';
     }
 }
 
 
 bool DFA::check_string(std::vector<uint32_t> &str) const {
-        uint32_t q_cur = starting_node;
+        uint32_t q_cur = this->starting_node;
         for (uint32_t c: str) {
-            q_cur = delta[c][q_cur];
+            q_cur = this->delta[c][q_cur];
         }
-        return acc[q_cur];
+        return this->acc[q_cur];
 }
 
 void DFA::delete_unreachable_states() {
@@ -80,8 +80,8 @@ void DFA::delete_unreachable_states() {
     // 2 if it is already visited and it's neighbours too
     std::vector<char> colors(size, 0);
     std::queue<uint32_t> q; // queue of states of color 1. When it becomes empty the algorithm finishes
-    colors[starting_node] = 1;
-    q.push(starting_node);
+    colors[this->starting_node] = 1;
+    q.push(this->starting_node);
 
 
     uint32_t new_size = 0; // size of DFA after deleting unreachable states = number of states popped from q
@@ -89,8 +89,8 @@ void DFA::delete_unreachable_states() {
         uint32_t cur_node = q.front();
         q.pop();
         colors[cur_node] = 2; ++new_size;
-        for (uint32_t i = 0; i < alphabet_length; ++i) {
-            uint32_t next_node = delta[i][cur_node];
+        for (uint32_t i = 0; i < this->alphabet_length; ++i) {
+            uint32_t next_node = this->delta[i][cur_node];
             if (colors[next_node] == 0) { 
                 colors[next_node] = 1;
                 q.push(next_node);
@@ -98,11 +98,11 @@ void DFA::delete_unreachable_states() {
         }
     }
 
-    if (new_size == size) return; // we have nothing to delete
+    if (new_size == this->size) return; // we have nothing to delete
 
-    std::vector<uint32_t> node2new_idx(size); // each state will have new index
+    std::vector<uint32_t> node2new_idx(this->size); // each state will have new index
     uint32_t cur = 0;
-    for (uint32_t i = 0; i < size; ++i) {
+    for (uint32_t i = 0; i < this->size; ++i) {
         if (colors[i] == 2) {
             node2new_idx[i] = cur;
             ++cur;
@@ -110,15 +110,15 @@ void DFA::delete_unreachable_states() {
     }
 
     // new delta function and in
-    std::vector<std::vector<uint32_t> > new_delta(alphabet_length, std::vector<uint32_t>(new_size));
+    std::vector<std::vector<uint32_t> > new_delta(this->alphabet_length, std::vector<uint32_t>(new_size));
     std::vector<bool> new_v_acc(new_size);
 
 
     for (uint32_t i = 0; i < size; ++i) {
         if (colors[i] == 2) { // if state is visited
-            new_v_acc[node2new_idx[i]] = acc[i];
-            for (uint32_t a=0; a < alphabet_length; ++a) {
-                new_delta[a][node2new_idx[i]] = node2new_idx[delta[a][i]];
+            new_v_acc[node2new_idx[i]] = this->acc[i];
+            for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+                new_delta[a][node2new_idx[i]] = node2new_idx[this->delta[a][i]];
             }
         }
     }
@@ -136,30 +136,30 @@ void DFA::construct_reversed_delta() {
     // reversed_delta[addresses_for_reversed_delta[a][s]], reversed_delta[addresses_for_reversed_delta[a][s] + 1], ...
     // ..., reversed_delta[addresses_for_reversed_delta[a][s] + reversed_delta_lengths[a][s] - 1] are all states t
     // such as delta(t, a) = s
-    addresses_for_reversed_delta.assign(alphabet_length, std::vector<uint32_t>(size, 0));
-    reversed_delta.assign(size * alphabet_length, 0);
-    std::vector<std::vector<uint32_t> > reversed_delta_lengths(alphabet_length, std::vector<uint32_t>(size, 0));
+    this->addresses_for_reversed_delta.assign(this->alphabet_length, std::vector<uint32_t>(this->size, 0));
+    this->reversed_delta.assign(this->size * this->alphabet_length, 0);
+    std::vector<std::vector<uint32_t> > reversed_delta_lengths(this->alphabet_length, std::vector<uint32_t>(this->size, 0));
 
-    for (uint32_t a = 0; a < alphabet_length; ++a) {
-        for (uint32_t s = 0; s < size; ++s) {
-            ++reversed_delta_lengths[a][delta[a][s]];
+    for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+        for (uint32_t s = 0; s < this->size; ++s) {
+            ++reversed_delta_lengths[a][this->delta[a][s]];
         }
     }
 
     uint32_t cur = 0;
-    for (uint32_t a = 0; a < alphabet_length; ++a) {
-        for (uint32_t s = 0; s < size; ++s) {
-            addresses_for_reversed_delta[a][s] = cur;
+    for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+        for (uint32_t s = 0; s < this->size; ++s) {
+            this->addresses_for_reversed_delta[a][s] = cur;
             cur += reversed_delta_lengths[a][s];
         }
     }
 
-    std::vector<std::vector<uint32_t> > addresses_for_put = addresses_for_reversed_delta;
+    std::vector<std::vector<uint32_t> > addresses_for_put = this->addresses_for_reversed_delta;
 
-    for (uint32_t s = 0; s < size; ++s) {
-        for (uint32_t a = 0; a < alphabet_length; ++a) {
-            uint32_t address_to_put = addresses_for_put[a][delta[a][s]];
-            reversed_delta[address_to_put] = s;
+    for (uint32_t s = 0; s < this->size; ++s) {
+        for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+            const uint32_t address_to_put = addresses_for_put[a][this->delta[a][s]];
+            this->reversed_delta[address_to_put] = s;
             ++addresses_for_put[a][delta[a][s]];
         }
     }
@@ -244,9 +244,6 @@ void DFA::color_acc_and_rej_in_2_colors() {
         else { L[a].push_back(1); info_L[a][1] = true; }
     }
     
-    blocks_need_to_be_separated.assign(size, false);
-    block2index_of_new_block.assign(size, EMPTY_STATE);
-
     this->colors = 2;
 }
 
