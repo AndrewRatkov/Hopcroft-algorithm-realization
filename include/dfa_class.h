@@ -27,9 +27,9 @@ const uint32_t EMPTY_STATE = UINT32_MAX;
 // I'm going to color the states (put them in different blocks) sometimes while minimizing the dfa
 // I will need the flowing information for each state
 struct StateInfo {
-    uint32_t color=UINT32_MAX; // when minimising we color the states
-    uint32_t next_state_of_same_color=EMPTY_STATE; // number of previous state of the same color
-    uint32_t prev_state_of_same_color=EMPTY_STATE; // number of the next state of the same color
+    uint32_t block=UINT32_MAX; // when minimising we color the states
+    uint32_t next_state_of_same_block=EMPTY_STATE; // number of previous state of the same color
+    uint32_t prev_state_of_same_block=EMPTY_STATE; // number of the next state of the same color
 };
 
 class DFA{
@@ -40,13 +40,14 @@ private:
     std::vector<std::vector<uint32_t> > delta; // delta function
     std::vector<bool> acc;
     uint32_t starting_node=0;
+
     std::vector<StateInfo> states_info={}; // information about colors and acc/rej of all states
 
-    std::vector<uint32_t> block2first_state_of_this_block={}; // if we color states we need to remember index of first state of each color
-    std::vector<std::vector<uint32_t> > block_and_char2first_node_of_this_color_and_char={};
+    std::vector<uint32_t> block2first_state_in_it={}; // if we color states we need to remember index of first state of each color
+    std::vector<std::vector<uint32_t> > block_and_char2first_B_cap={};
 
     std::vector<std::vector<bool> > info_L = {};
-    std::vector<std::vector<uint32_t> > L={};
+    std::queue<std::pair<uint32_t, uint32_t> > L={};
 
     // for each char a in alphabet if state is reachable by a then we need
     // to know the next state of same color which is also reachable by a
@@ -63,9 +64,16 @@ private:
     std::vector<std::vector<uint32_t> > B_cap_lengths = {};
 
     std::vector<uint32_t> sep_blocks={}; // Blocks to separate
-    std::vector<uint32_t> sep_states={}; // states which should be separated from the blocks they are in (states, which will change their color)
+    std::vector<uint32_t> sep_states={}; // states which should be separated from the blocks they are in (states, which will change their block)
 
     std::vector<uint32_t> block_lengths={};
+
+    struct info {
+        uint32_t states2extract;
+        uint32_t new_color;
+    };
+
+    std::unordered_map<uint32_t, info> blocks_info;
 
     uint32_t colors=0;
 
@@ -113,8 +121,6 @@ public:
     void minimization(bool no_debug);
 
     void print_current_classes_of_equality(bool finished, bool debug) const;
-
-    void print_L() const;
 
     void print_B_caps() const;
 
