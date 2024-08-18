@@ -68,6 +68,10 @@ private:
 
     std::vector<uint32_t> block_lengths={};
 
+    bool deleted_unreachable_states = false;
+    bool constructed_reversed_delta = false;
+    bool minimized = false;
+
     struct info {
         uint32_t states2extract;
         uint32_t new_color;
@@ -120,16 +124,18 @@ public:
 
     void minimization(bool no_debug);
 
-    void print_current_classes_of_equality(bool finished, bool debug) const;
+    void print_current_classes_of_equality() const;
 
-    void print_B_caps() const;
-
-    uint32_t get_size() const {
+    uint32_t get_size() const noexcept {
         return this->size;
     }
 
-    uint32_t get_alphabet_length() const {
+    uint32_t get_alphabet_length() const noexcept {
         return this->alphabet_length;
+    }
+
+    uint32_t get_starting_node() const noexcept {
+        return this->starting_node;
     }
 
     int save_to_file(char* filename) const;

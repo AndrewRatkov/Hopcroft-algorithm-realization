@@ -17,7 +17,7 @@ obj/dfa.o: src/dfa_methods.cpp include/dfa_class.h
 obj/dfa_build.o: src/dfa_build.cpp include/dfa_class.h
 	g++ $(CPPFLAGS) src/dfa_build.cpp -o obj/dfa_build.o
 
-obj/nfa.o: src/nfa_methods.cpp include/dfa_class.h
+obj/nfa.o: src/nfa_methods.cpp include/nfa_class.h
 	g++ $(CPPFLAGS) src/nfa_methods.cpp -o obj/nfa.o
 
 test/test.o: test/test.cpp include/dfa_class.h include/nfa_class.h obj/dfa.o obj/nfa.o obj/dfa_build.o src/dfa_methods.cpp src/nfa_methods.cpp src/dfa_build.cpp

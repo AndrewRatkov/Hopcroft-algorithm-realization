@@ -33,19 +33,19 @@ int main(int argc, char *argv[]) {
         need_to_save = true;
     }
 
-    bool no_debug_flag = false; // debug gives some more information about minimizing
+    bool debug_flag = false; // debug gives some more information about minimizing
     bool time_counter_flag = false;
     bool print_table_at_the_end = true;
     for (int i = 3; i < argc; i++) {
         if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--time") == 0) time_counter_flag = true;
-        else if (strcmp(argv[i], "-nd") == 0 || strcmp(argv[i], "--no-debug") == 0) no_debug_flag = true;
+        else if (strcmp(argv[i], "-nd") == 0 || strcmp(argv[i], "--no-debug") == 0) debug_flag = false;
         else if (strcmp(argv[i], "-np") == 0 || strcmp(argv[i], "--no-print") == 0) print_table_at_the_end = false;
     }
 
     // Start the timer
     auto start = std::chrono::high_resolution_clock::now();
 
-    new_dfa.minimization(no_debug_flag);
+    new_dfa.minimization(debug_flag);
 
     // // End the timer
     auto end = std::chrono::high_resolution_clock::now();

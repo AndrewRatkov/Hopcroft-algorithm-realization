@@ -58,7 +58,7 @@ void DFA::print_table() const {
             while (next_copy >= 10) {next_copy /= 10; --spaces;}
             std::cout << "|" << std::string(spaces, ' ') << this->delta[i][node] << ' ';
         }
-        std::cout << "| " << (acc[node] ? "ACC" : "REJ") << '\n';
+        std::cout << "| " << (this->acc[node] ? "ACC" : "REJ") << '\n';
         std::cout << std::string(spaces_per_cell * (this->alphabet_length + 1) + this->alphabet_length + 7, '=') << '\n';
     }
 }
@@ -73,6 +73,7 @@ bool DFA::check_string(std::vector<uint32_t> &str) const {
 }
 
 void DFA::delete_unreachable_states() {
+    if (this->deleted_unreachable_states) return;
     // we will color all states in 3 colors:
     // 0 if it isn't visited yet
     // 1 if it is visited, but it's neighbours
@@ -98,7 +99,10 @@ void DFA::delete_unreachable_states() {
         }
     }
 
-    if (new_size == this->size) return; // we have nothing to delete
+    if (new_size == this->size) { // we have nothing to delete
+        this->deleted_unreachable_states = true;
+        return;
+    }
 
     std::vector<uint32_t> node2new_idx(this->size); // each state will have new index
     uint32_t cur = 0;
@@ -114,7 +118,7 @@ void DFA::delete_unreachable_states() {
     std::vector<bool> new_v_acc(new_size);
 
 
-    for (uint32_t i = 0; i < size; ++i) {
+    for (uint32_t i = 0; i < this->size; ++i) {
         if (colors[i] == 2) { // if state is visited
             new_v_acc[node2new_idx[i]] = this->acc[i];
             for (uint32_t a = 0; a < this->alphabet_length; ++a) {
@@ -124,13 +128,17 @@ void DFA::delete_unreachable_states() {
     }
 
     this->size = new_size;
-    this->starting_node = node2new_idx[starting_node];
+    this->starting_node = node2new_idx[this->starting_node];
     this->delta = std::move(new_delta);
     this->acc = std::move(new_v_acc);
+
+    this->deleted_unreachable_states = true;
 }
 
 
 void DFA::construct_reversed_delta() {
+    if (this->constructed_reversed_delta) return;
+
     // reversed delta will be a vector of size*alphabet_length (instead of vector<vector<vector>>>)
     // for each state s and char a reversed_delta_lengths[a][s] is number of states t: delta(t, a) = s
     // reversed_delta[addresses_for_reversed_delta[a][s]], reversed_delta[addresses_for_reversed_delta[a][s] + 1], ...
@@ -164,6 +172,7 @@ void DFA::construct_reversed_delta() {
         }
     }
 
+    this->constructed_reversed_delta = true;
 }
 
 
@@ -306,9 +315,8 @@ void DFA::extract_state_to_new_block(const uint32_t s, const uint32_t new_block)
 
 
 bool DFA::minimize_iteration() {
-    if (this->colors == this->size) return true; // number of blocks == size => nothing to minimize
+    if (this->colors == this->size || this->L.empty()) return true; // number of blocks == size => nothing to minimize
 
-    if (this->L.empty()) return true;
     const std::pair<uint32_t, uint32_t>& extracted_pair = this->L.front();
     this->L.pop();
     const uint32_t a = extracted_pair.first;
@@ -318,10 +326,10 @@ bool DFA::minimize_iteration() {
     uint32_t state_i = this->block_and_char2first_B_cap[a][i];
     while (state_i != EMPTY_STATE) {
         for (uint32_t t = this->addresses_for_reversed_delta[a][state_i]; t < next_address_for_reversed_delta(a, state_i); ++t) {
-            uint32_t sep_state = this->reversed_delta[t]; // delta(sep_state, a) in B(i)
+            const uint32_t sep_state = this->reversed_delta[t]; // delta(sep_state, a) in B(i)
             this->sep_states.push_back(sep_state);
             
-            uint32_t sep_state_color = this->states_info[sep_state].block;
+            const uint32_t sep_state_color = this->states_info[sep_state].block;
             if (this->blocks_info.find(sep_state_color) == this->blocks_info.end()) {
                 this->blocks_info[sep_state_color] = {1, EMPTY_STATE};
             } else {
@@ -345,7 +353,7 @@ bool DFA::minimize_iteration() {
             if (this->block_lengths[block] < 2 * new_block_size) {
                 uint32_t s = this->block2first_state_in_it[block];
                 while (s != EMPTY_STATE) {
-                    uint32_t next_state = this->states_info[s].next_state_of_same_block;
+                    const uint32_t next_state = this->states_info[s].next_state_of_same_block;
                     if (this->states_info[this->delta[a][s]].block != i) {
                         extract_state_to_new_block(s, new_block);
                     }
@@ -397,23 +405,50 @@ bool DFA::minimize_iteration() {
     return false;
 }
 
-void DFA::minimization(bool no_debug) {
-    if (!no_debug) std::cout << "DELETING UNREACHABLE STATES...\n";
-    delete_unreachable_states();
-    if (size < 2) return;
-    if (!no_debug) std::cout << "MINIMIZATION STARTED...\n";
-    construct_reversed_delta();
+void DFA::minimization(bool debug) {
+    if (this->minimized) {
+        if (debug) std::cout << "Already minimized\n";
+        return;
+    }
+
+    if (!this->deleted_unreachable_states) {
+        if (debug) std::cout << "DELETING UNREACHABLE STATES...\n";
+        delete_unreachable_states();
+    }
+
+    if (this->size < 2) {
+        if (debug) std::cout << "Size is " << this->size << ", sowe don't need to minimize\n";
+        return;
+    }
+
+    if (!this->constructed_reversed_delta) {
+        if (debug) std::cout << "CONSTRUCTING REVERSED DELTA\n";
+        construct_reversed_delta();
+    }
+
+    if (debug) std::cout << "MINIMIZATION STARTED...\n";    
     color_acc_and_rej_in_2_colors();
 
-
-    bool finish = false; uint32_t it = 0;
+    bool finish = false;
+    uint32_t it = 0;
     while (!finish) {
         finish = minimize_iteration();
         ++it;
     }
-    if (!no_debug) {
+
+    if (debug) {
         std::cout << "MINIMIZATION FINISHED SUCCESSFULLY\n";
         std::cout << it << " iterations happened\n";
+        std::cout << "UPDATING DFA...\n";
+    }
+
+    if (this->colors == this->size) {
+        this->minimized = true;
+        if (debug) {
+            std::cout << "DFA UPDATED\n";
+            std::cout << "It has " << size << " states now\n";
+        }
+        return;
     }
 
     std::vector<std::vector<uint32_t> > new_delta(this->alphabet_length, std::vector<uint32_t>(this->colors));
@@ -430,61 +465,47 @@ void DFA::minimization(bool no_debug) {
     }
 
     init(this->alphabet_length, this->colors, this->states_info[this->starting_node].block, new_delta, new_acc);
+    this->minimized = true;
 
-    if (!no_debug) {
+    // if dfa became smaller, these fields are not correct< so delete them
+    this->constructed_reversed_delta = false;
+    this->addresses_for_reversed_delta.clear();
+    this->reversed_delta.clear();
+
+    if (debug) {
         std::cout << "DFA UPDATED\n";
         std::cout << "It has " << size << " states now\n";
     }
 }
 
 
-void DFA::print_current_classes_of_equality(bool finished, bool debug) const {
-    if (!finished) {return;}
-    uint32_t not_empty_blocks = 0;
-    for (uint32_t c = 0; c < size; c++) {
-        if (debug) std::cout << "Block ";
-        if (block2first_state_in_it[c] == EMPTY_STATE) {
-            if (debug) std::cout << c << ": No states with this color\n";
+void DFA::print_current_classes_of_equality() const {
+    std::cout << "There are " << this->colors << " blocks\n";
+    for (uint32_t block = 0; block < this->colors; ++block) {
+        std::cout << "Block " << block << ": ";
+        if (this->block2first_state_in_it[block] == EMPTY_STATE) {
+            std::cout << "No states in this block\n";
             continue;
         }
-        not_empty_blocks++;
-        if (!debug) continue;
-        uint32_t s = block2first_state_in_it[c];
-        std::cout << c << ": ";
+        uint32_t s = this->block2first_state_in_it[block];
         while (s != EMPTY_STATE) {
             std::cout << s << ' ';
-            s = states_info[s].next_state_of_same_block;
-            // the last state with this color has a pointer to EMPTY_STATE
+            s = this->states_info[s].next_state_of_same_block;
         }
         std::cout << '\n';
-        for (uint32_t a = 0; a < alphabet_length; a++) {
+        for (uint32_t a = 0; a < this->alphabet_length; ++a) {
             std::cout << a << "-reachable: ";
-            uint32_t s_it = block_and_char2first_B_cap[a][c];
+            uint32_t s_it = this->block_and_char2first_B_cap[a][block];
             while (s_it != EMPTY_STATE) {
                 std::cout << s_it << ' ';
-                // std::cout << "(" << prev_B_cap[a][s_it] << ") ";
-                s_it = next_B_cap[a][s_it];
+                s_it = this->next_B_cap[a][s_it];
             }
             std::cout << '\n';
         }
     }
-    std::cout << not_empty_blocks << " blocks are not empty\n";
     std::cout << "+++++++++++++++++++++\n";
 }
 
-void DFA::print_B_caps() const {
-    for (uint32_t color = 0; color < size; color++) {
-        for (uint32_t a = 0; a < alphabet_length; a++) {
-            std::cout << "color: " << color << "; char: " << a << '\n';
-            uint32_t s = block_and_char2first_B_cap[a][color];
-            while (s != EMPTY_STATE) {
-                std::cout << "(" << s << ", " << prev_B_cap[a][s] << ", " << next_B_cap[a][s] << "); ";
-                s = next_B_cap[a][s];
-            }
-            std::cout << "\n";
-        }
-    }
-}
 
 int DFA::save_to_file(char* filename) const {
     FILE* file = fopen(filename, "wb");
