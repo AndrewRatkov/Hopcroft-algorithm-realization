@@ -520,18 +520,17 @@ int DFA::save_to_file(char* filename) const {
         return 1;
     }
 
-    for (uint32_t a = 0; a < alphabet_length; a++) {
-        for (uint32_t i = 0; i < size; i++) {
-            int delta_writing = fwrite(&delta[a][i], sizeof(uint32_t), 1, file);
-            if (delta_writing != 1) { fclose(file); return 1; }
+    for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+        for (uint32_t i = 0; i < this->size; ++i) {
+            if (fwrite(&this->delta[a][i], sizeof(uint32_t), 1, file) != 1) { fclose(file); return 1; }
         }
     }
 
     
     for (uint32_t i = 0; i < size; i += 8) {
         unsigned char bools = 0;
-        for (uint32_t j = 0; j < 8; j++) {
-            if (i + j < size && acc[i + j]) {
+        for (uint32_t j = 0; j < 8; ++j) {
+            if (i + j < this->size && acc[i + j]) {
                 bools |= (1 << j);
             }
         }
@@ -544,7 +543,9 @@ int DFA::save_to_file(char* filename) const {
 
 
 bool DFA::operator==(const DFA& other) const {
-    // TODO: add `minimized` field
+    // we compare only minimized DFAs
+    if (!this->minimized || !this->minimized) return false;
+
     if (this->size != other.size) return false;
     if (this->alphabet_length != other.alphabet_length) return false;
     

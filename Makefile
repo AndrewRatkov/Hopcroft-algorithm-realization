@@ -1,7 +1,7 @@
 .PHONY: all clean
 
-CPPFLAGS = -Iinclude -Wall -Wextra -Werror -c
-CPPFLAGS_FOR_MAIN_FILE = -Iinclude -Wall -Wextra -Werror
+CPPFLAGS = -Iinclude -O3 -Wall -Wextra -Werror -c
+CPPFLAGS_FOR_MAIN_FILE = -Iinclude -O3 -Wall -Wextra -Werror
 
 all: mkobj minimizer test/test.o
 
