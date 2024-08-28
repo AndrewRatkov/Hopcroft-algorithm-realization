@@ -1,7 +1,7 @@
 #include "dfa_class.h"
 #include "nfa_class.h"
 
-char integer2char(uint32_t x) { // 0 <= x < 62
+char integer2char(const uint32_t x) { // 0 <= x < 62
     assert(x < 62);
     if (x < 10) {
         return ('0' + (char)x);
@@ -12,7 +12,7 @@ char integer2char(uint32_t x) { // 0 <= x < 62
     }
 }
 
-uint32_t char2integer(char c) {
+uint32_t char2integer(const char c) {
     assert(('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
     if ('0' <= c && c <= '9') {
         return (int)(c - '0');
@@ -169,87 +169,101 @@ request_check correctness_of_dfa_input(char* command, char* dfa_str) {
 
 DFA::DFA(char* command, char* s) {
     if (strcmp(command, "from_dfa_string") == 0) {
-        std::vector<bool> _v_acc = {};
-        std::vector<std::vector<uint32_t> > _delta;
+        this->acc = {};
+        this->delta = {};
 
         uint32_t idx = 0;
         while (s[idx] != '_') {
-            _v_acc.push_back(s[idx] != '0');
+            this->acc.push_back(s[idx] != '0');
             ++idx;
         }
 
-        uint32_t _size = idx;
+        this->size = idx;
         uint32_t string_length = strlen(s);
-        uint32_t _alphabet_size = (string_length - 1) / _size - 1;
-        idx++;
-        _delta.assign(_alphabet_size, std::vector<uint32_t>(_size));
+        this->alphabet_length  = (string_length - 1) / this->size - 1;
+        ++idx;
+        this->delta.assign(this->alphabet_length, std::vector<uint32_t>(this->size));
 
         while (idx < string_length) {
-            _delta[(idx - _size - 1) % _alphabet_size][(idx - _size - 1) / _alphabet_size] = char2integer(s[idx]);
+            this->delta[(idx - this->size - 1) % this->alphabet_length][(idx - this->size - 1) / this->alphabet_length] = char2integer(s[idx]);
             ++idx;
         }
-        init(_alphabet_size, _size, 0, _delta, _v_acc);
+        this->starting_node = 0;
     } else if (strcmp(command, "bamboo") == 0  || strcmp(command, "circle") == 0) {
-        uint32_t _size, _alphabet_length;
-        sscanf(s, "%d,%d", &_size, &_alphabet_length);
-        std::vector<bool> _v_acc(_size, false);
-        std::vector<std::vector<uint32_t> > _delta(_alphabet_length, std::vector<uint32_t>(_size));
-        _v_acc[_size - 1] = true;
-        for (uint32_t s = 0; s < _size - 1; s++) {
-            for (uint32_t a = 0; a < _alphabet_length; a++) {
-                _delta[a][s] = s + 1;
+        sscanf(s, "%d,%d", &(this->size), &(this->alphabet_length));
+        this->acc.assign(this->size, false);
+        this->delta.assign(this->alphabet_length, std::vector<uint32_t>(this->size));
+        this->acc[this->size - 1] = true;
+        for (uint32_t s = 0; s < this->size - 1; ++s) {
+            for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+                this->delta[a][s] = s + 1;
             }
         }
-        for (uint32_t a = 0; a < _alphabet_length; a++) {
-            _delta[a][_size - 1] = (strcmp(command, "circle") == 0 ? _size - 1 : 0);
+        for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+            this->delta[a][this->size - 1] = (strcmp(command, "circle") ? this->size - 1 : 0);
         }
-        init(_alphabet_length, _size,  0, _delta, _v_acc);
+        this->starting_node = 0;
     } else if (strcmp(command, "repeated_cycle") == 0) {
-        uint32_t _size, _alphabet_length = 1, _cycle_size;
-        sscanf(s, "%d,%d", &_size, &_cycle_size);
-        std::vector<bool> _v_acc(_size, false);
-        std::vector<std::vector<uint32_t> > _delta(_alphabet_length, std::vector<uint32_t>(_size));
-        for (uint32_t s = 0; s < _size - 1; s++) {
-            _v_acc[s] = ((s + 1) % _cycle_size == 0);
-            _delta[0][s] = s + 1;
+        this->alphabet_length = 1;
+        uint32_t _cycle_size;
+        sscanf(s, "%d,%d", &(this->size), &_cycle_size);
+        this->acc.assign(this->size, false);
+        this->delta.assign(this->alphabet_length, std::vector<uint32_t>(this->size));
+        for (uint32_t s = 0; s < this->size - 1; ++s) {
+            this->acc[s] = ((s + 1) % _cycle_size == 0);
+            this->delta[0][s] = s + 1;
         }
-        _v_acc[_size - 1] = true;
-        init(_alphabet_length, _size, 0, _delta, _v_acc);
-
+        this->acc[this->size - 1] = true;
+        this->starting_node = 0;
     } else if (strcmp(command, "from_bin_file") == 0) {
         FILE* file = fopen(s, "rb");
-        uint32_t _size, _alphabet_length, _starting_node;
-        fread(&_size, sizeof(uint32_t), 1, file);
-        fread(&_alphabet_length, sizeof(uint32_t), 1, file);
-        fread(&_starting_node, sizeof(uint32_t), 1, file);
+        if (file == NULL) {
+            std::cerr << "couldn't open file\n";
+            return;
+        }
 
-        std::vector<std::vector<uint32_t> > _delta(_alphabet_length, std::vector<uint32_t>(_size));
+        if (fread(&(this->size), sizeof(uint32_t), 1, file) != 1) goto error_happened;
+        if (fread(&(this->alphabet_length), sizeof(uint32_t), 1, file) != 1) goto error_happened;
+        if (fread(&(this->starting_node), sizeof(uint32_t), 1, file) != 1) goto error_happened;
 
-        for (uint32_t a = 0; a < _alphabet_length; a++) {
-            for (uint32_t i = 0; i < _size; i++) {
-                fread(&_delta[a][i], sizeof(uint32_t), 1, file);
+        this->delta.assign(this->alphabet_length, std::vector<uint32_t>(this->size));
+
+        for (uint32_t a = 0; a < this->alphabet_length; ++a) {
+            for (uint32_t i = 0; i < this->size; ++i) {
+                if (fread(&(this->delta[a][i]), sizeof(uint32_t), 1, file) != 1) {
+                    goto error_happened;
+                }
             }
         }
 
-        std::vector<bool> _v_acc(_size);
-        for (uint32_t i = 0; i < _size; i += 8) {
+        this->acc.assign(this->size, false);
+        for (uint32_t i = 0; i < this->size; i += 8) {
             unsigned char c;
-            fread(&c, sizeof(unsigned char), 1, file);
-            for (uint32_t j = 0; j < 8; j++) {
-                if (i + j < _size) {
-                    _v_acc[i + j] = ((c & (1 << j)) ? true : false);
+            if (fread(&c, sizeof(unsigned char), 1, file) != 1) goto error_happened;
+            for (uint32_t j = 0; j < 8; ++j) {
+                if (i + j < this->size) {
+                    this->acc[i + j] = ((c & (1 << j)) ? true : false);
                 }
             }
         }
 
         fclose(file);
-        init(_alphabet_length, _size, _starting_node, _delta, _v_acc);
+        return;
+
+        error_happened:
+            fclose(file);
+            std::cerr << "error while reading happened\n";
+            this->alphabet_length = 1;
+            this->size = 1;
+            this->starting_node = 0;
+            this->acc = {true};
+            this->delta = {{0}};
 
     } else {
-        uint32_t _alphabet_length = 1, _size = 1;
-        std::vector<bool> _v_acc = {true};
-        std::vector<std::vector<uint32_t> > _delta = {{0}};
-        init(_alphabet_length, _size, 0, _delta, _v_acc);
-
+        this->alphabet_length = 1;
+        this->size = 1;
+        this->starting_node = 0;
+        this->acc = {true};
+        this->delta = {{0}};
     }
 }
