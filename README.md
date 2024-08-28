@@ -18,3 +18,4 @@ Hopcroft-algorithm-realization
    ╰╼ nfa_methods.cpp
 ```
 Документация (отчёт) находится в файле ```hopcroft_tex/hopcroft.pdf```
+[Старая версия]
