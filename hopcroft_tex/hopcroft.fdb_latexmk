@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex hopcroft"] 1723240309 "hopcroft.aux" "hopcroft.bbl" "hopcroft" 1723240550
+["bibtex hopcroft"] 1724876602 "hopcroft.aux" "hopcroft.bbl" "hopcroft" 1724876789
   "/usr/share/texlive/texmf-dist/bibtex/bst/base/plain.bst" 1292289607 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "hopcroft.aux" 1723240549 4015 6bc5f12774ae8602ba4163f6c7b75294 "pdflatex"
+  "hopcroft.aux" 1724876787 4015 428293279ba3ae14ca37922c95ece380 "pdflatex"
   "hopcroft.bib" 1722962366 520 f259d1bbe71f7f2476b52170b6807840 ""
   (generated)
   "hopcroft.bbl"
   "hopcroft.blg"
-["pdflatex"] 1723240545 "/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex" "hopcroft.pdf" "hopcroft" 1723240550
+["pdflatex"] 1724876783 "/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex" "hopcroft.pdf" "hopcroft" 1724876789
   "/etc/texmf/web2c/texmf.cnf" 1693995177 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/home/andrey/.texlive2021/texmf-var/fonts/tfm/lh/lh-t2a/labi0500.tfm" 1700164741 3604 e7705a9ac3540194c4b433e9e446b291 ""
   "/home/andrey/.texlive2021/texmf-var/fonts/tfm/lh/lh-t2a/labi0700.tfm" 1700164735 3600 cf5c23bf2fea13f496769afbe59ca4c8 ""
@@ -23,7 +23,7 @@
   "/home/andrey/.texlive2021/texmf-var/fonts/tfm/lh/lh-t2a/lati1000.tfm" 1700074091 3528 defd551e32c4af414f9b54b8101bfa9b ""
   "/home/andrey/.texlive2021/texmf-var/fonts/tfm/lh/lh-t2a/latt0800.tfm" 1703781815 1272 2a21550efcb075c108e98819097de5c8 ""
   "/home/andrey/.texlive2021/texmf-var/fonts/tfm/lh/lh-t2a/latt1000.tfm" 1703781809 1272 55f67101730a20777decd892fb4b4e3e ""
-  "/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex" 1723240545 89467 f7b29eb1d6660e6bffda1b39b8be345d ""
+  "/home/andrey/hopcroft/Hopcroft-algorithm-realization/hopcroft_tex/hopcroft.tex" 1724876783 86094 bb33ae9ac6fbc7b35fa3ab3c7ed08ee3 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/symbol/psyr.tfm" 1136768653 1408 5937f58aa508ea2cea4901c07d10f5fe ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
@@ -248,11 +248,11 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1700055327 4379155 98693266ff65f58d9f98aff394de12d2 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1710498416 2800514 1dcd0a161c688e5498672f2674f03352 ""
   "eagle.png" 1722962366 42022 5f3fba79175f603ff6031319f336aaf0 ""
-  "hopcroft.aux" 1723240549 4015 6bc5f12774ae8602ba4163f6c7b75294 "pdflatex"
-  "hopcroft.bbl" 1723240309 457 dd146a0098dade0da21f4316b8c4f52c "bibtex hopcroft"
-  "hopcroft.out" 1723240549 3419 7dae872747cd01bf68ace093bb39efe4 "pdflatex"
-  "hopcroft.tex" 1723240545 89467 f7b29eb1d6660e6bffda1b39b8be345d ""
-  "hopcroft.toc" 1723240549 1614 c4441da322455929c9aea5988e21307a "pdflatex"
+  "hopcroft.aux" 1724876787 4015 428293279ba3ae14ca37922c95ece380 "pdflatex"
+  "hopcroft.bbl" 1724876602 457 dd146a0098dade0da21f4316b8c4f52c "bibtex hopcroft"
+  "hopcroft.out" 1724876787 3419 7dae872747cd01bf68ace093bb39efe4 "pdflatex"
+  "hopcroft.tex" 1724876783 86094 bb33ae9ac6fbc7b35fa3ab3c7ed08ee3 ""
+  "hopcroft.toc" 1724876787 1614 306eefd4fae79c5dd5b623aa01b51b1c "pdflatex"
   (generated)
   "hopcroft.aux"
   "hopcroft.log"

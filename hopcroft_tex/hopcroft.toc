@@ -8,9 +8,9 @@
 \contentsline {subsection}{\numberline {1.6}Асимптотика алгоритма}{6}{subsection.1.6}%
 \contentsline {section}{\numberline {2}Реализация алгоритма}{8}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Класс DFA}{8}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Класс NFA}{11}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.2}Класс NFA}{10}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}Взаимодействие с пользователем}{11}{subsection.2.3}%
-\contentsline {section}{\numberline {3}Анализ работы программы}{13}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Сравнение времени работы алгоритмов Хопкрофта и Мура}{13}{subsection.3.1}%
+\contentsline {section}{\numberline {3}Анализ работы программы}{12}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Сравнение времени работы алгоритмов Хопкрофта и Мура}{12}{subsection.3.1}%
 \contentsline {subsection}{\numberline {3.2}Расходуемая память}{14}{subsection.3.2}%
 \contentsline {section}{\numberline {4}Заключение}{14}{section.4}%
