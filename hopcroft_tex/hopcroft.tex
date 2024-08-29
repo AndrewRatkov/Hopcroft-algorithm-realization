@@ -344,7 +344,8 @@
     \item[\ding{118}] \path{dfa_class.h} --- объявление класса DFA.
     \item[\ding{118}] \path{nfa_class.h} --- объявление класса NFA.
   \end{itemize}
-  \item Директория \path{obj/} --- содержит объектные файлы (скомпилированные \path{.cpp} файлы)
+  \item Директория \path{obj/} --- содержит объектные файлы (скомпилированные \path{.cpp} файлы) --- создаётся при компиляции.
+  \item Директория \path{test/} --- использовалась для тестирования, содержит \path{test.cpp} и \path{test.o} --- программа, принимающая на вход два DFA, минимизирующая их и хатем сравнивающая на равенство.
   \item Файл \path{minimizer} --- скомпилированный проект.
   \item \path{Makefile} --- файл для сборки.
 \end{itemize}
@@ -371,7 +372,7 @@
   
     \item \lstinline[language=C++]!std::vector<uint32_t> block2first_state_in_it! --- по номеру блока(цвета) сопоставляет первое состояние этого блока(цвета). То есть $i$-ый элемент показывает первое состояние в блоке $B(i)$.
   \item \lstinline[language=C++]!std::vector<std::vector<uint32_t> > block_and_char2first_B_cap! --- здесь элемент \lstinline[language=C++]![a][i]! показывает первое состояние в множестве $\hat B(B(i), a)$.
-  \item \lstinline[language=C++]!std::vector<std::vector<uint32_t> > L! --- здесь $a$-ый элемент --- вектор, в котором написаны состояния множества $L(a)$.
+  \item \lstinline[language=C++]!std::queue<std::pair<uint32_t, uint32_t> > L! --- здесь лежат пары из индексов блоков и символов по которым будут измельчения.
   \item \lstinline[language=C++]!std::vector<std::vector<bool> > info_L! --- здесь элемент \lstinline[language=C++]![a][i]! принимает значение \lstinline[language=C++]!true!, если $i \in L(a)$, иначе принимает значение \lstinline[language=C++]!false!.
 \end{itemize}
 Следующие поля нужны для того, чтобы уметь быстро итерироваться и работать с множествами $\hat B(B(i), a)$:
@@ -433,6 +434,7 @@
 \item[\ding{228}] \lstinline[language=C++]!void print_table()! --- вывод таблицы $\delta$ в стандартный поток вывода stdout (если в DFA не более 50 состояний).
 \item[\ding{228}] \lstinline[language=C++]!void print_current_classes_of_equality(bool finished, bool debug)! --- печатает текущее разбиение состояний на блоки в stdout.
 \item[\ding{228}] \lstinline[language=C++]!uint32_t get_size()! --- возвращает размер DFA.
+\item[\ding{228}] \lstinline[language=C++]!bool operator==(DFA& other)! --- проверяет DFA на равенство другому.
 \end{itemize}
 Также есть метод:
 \begin{itemize}
@@ -672,14 +674,16 @@ Execution time: 3.6638 seconds.
 
 \subsection{Расходуемая память}
 
-Для каждого состояния хранятся номер блока, в котором оно находится (4 байта), номер следующего и предыдущего состояний их того же самого блока (8 байт). Также для каждого символа $a \in \Sigma$ хранятся номер следующего и предыдущего состояний из этого же блока, которые достижимы по этому символу $a$ (если само состояние достижимо по символу $a$) --- то есть ещё $|\Sigma| \cdot 8$ байт. Для содержания состояния в $L(a)$ нужно $4 + 1 = 5$ байт (4 на само состояние, если оно там лежит, и 1 байт показывающий, лежит ли оно в $L(a)$ или нет). Итого, ещё $|\Sigma| \cdot 5$ байт.
+Для каждого состояния хранятся номер блока, в котором оно находится (4 байта), номер следующего и предыдущего состояний их того же самого блока (8 байт). Также для каждого символа $a \in \Sigma$ хранятся номер следующего и предыдущего состояний из этого же блока, которые достижимы по этому символу $a$ (если само состояние достижимо по символу $a$) --- то есть ещё $|\Sigma| \cdot 8$ байт. Для содержания состояния в $L(a)$ нужно $8 + 1/8$ байт (8 на само состояние и символ $a$, в случае если оно там лежит, и 1 бит показывающий, лежит ли оно в $L(a)$ или нет). Итого, ещё $|\Sigma| \cdot (8 + 1/8)$ байт. Для хранения правил $\delta$ нужно $|\Sigma| \cdot 4$ байта на состояние, и ещё 1 бит о том, принимается оно или отвергается.
 
 Для каждого блока $B(j)$ (которых может быть от 1 до $n$) хранится количество состояний в нём, а также количество состояний в нём, достижимых по символу $a$ (для каждого $a \in \Sigma$) --- это $(|\Sigma| + 1) \cdot 4$ байт. И ещё хранятся $first(j)$ и $first(j, a)$ (для каждого $a \in \Sigma$) --- это ещё $(|\Sigma| + 1) \cdot 4$ байт.
 
-Также каждое из полей класса \lstinline[language=C++]!class DFA!, отвечающих за одну итерацию минимизации, может достигать размера $n$ (поля \lstinline[language=C++]!blocks_need_to_be_separated!, \lstinline[language=C++]!block2index_of_new_block!, \lstinline[language=C++]!sep_blocks!, \lstinline[language=C++]!sep_states!, \lstinline[language=C++]!empty_colors!,\\ \lstinline[language=C++]!block2index_special!). Они суммарно занимают не более $21 \cdot n$ байт. 
+Структуры \lstinline[language=C++]!addresses_for_reversed_delta! и \lstinline[language=C++]!reversed_delta! занимают по $|\Sigma| \cdot n \cdot 4$ байта.
 
-Также, для содержания функции $\delta^{-1}$ нужно $3 \cdot |\Sigma| \cdot n$ байт. Итого, суммарно используется не более чем
-\[(4 + 8 + |\Sigma| \cdot 8 + |\Sigma| \cdot 5 + (|\Sigma| + 1) \cdot 4 \cdot 2 + 21 + 3 \cdot |\Sigma|) \cdot n = (41 + |\Sigma| \cdot 24) \cdot n \ \text{байт,}\]
+Также каждое из полей класса \lstinline[language=C++]!class DFA!, отвечающих за одну итерацию минимизации, может достигать размера $n$ (поля \lstinline[language=C++]!sep_blocks!, \lstinline[language=C++]!sep_states!, \lstinline[language=C++]!blocks_info!). Они суммарно занимают не более $20 \cdot n$ байт. 
+
+Итого, суммарно используется не более чем
+\[(4 + 8 + |\Sigma| \cdot 8 + |\Sigma| \cdot (8 + 1/8) + |\Sigma| \cdot 4 + 1/8 + (|\Sigma| + 1) \cdot 4 \cdot 2 + |\Sigma| \cdot 4 \cdot 2+ 20) \cdot n = (40 + 1/8 + |\Sigma| \cdot (36 + 1/8)) \cdot n \ \text{байт,}\]
 где $n$ --- число состояний в исходном DFA.
 \section{Заключение}
 Исследована статья Джона Хопкрофта \cite{hopcroft1971n}, в которой описан этот алгоритм.
