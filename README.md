@@ -12,6 +12,7 @@ Hopcroft-algorithm-realization
 ├╼ obj/             ← object files *.o (will be created after you run make)
 ├╼ test/            ← some programs for test 
 ├╼ README.md        ← this file ;)
+├╼ presentation.pdf ← presentation (in English)
 ╰╼ src/             ← source files (*.cpp)
    ├╼ main.cpp
    ├╼ dfa_methods.cpp

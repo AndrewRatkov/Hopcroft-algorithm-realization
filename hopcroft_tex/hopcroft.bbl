@@ -6,10 +6,4 @@ John Hopcroft.
 \newblock In {\em Theory of machines and computations}, pages 189--196.
   Elsevier, 1971.
 
-\bibitem{shift2008}
-Galina Jir{\'a}skov{\'a} and Alexander Okhotin.
-\newblock State complexity of cyclic shift.
-\newblock {\em RAIRO-Theoretical Informatics and Applications}, 42(2):335--360,
-  2008.
-
 \end{thebibliography}
